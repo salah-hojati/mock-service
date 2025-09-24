@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.2"
+             xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd">
+
+    <persistence-unit name="mock-pu" transaction-type="JTA">
+        <!-- The JNDI name of the DataSource you configured in WebLogic -->
+        <jta-data-source>jdbc/myMockDS</jta-data-source>
+
+        <!-- List your entity classes here -->
+        <class>org.example.mock.entity.MockConfig</class>
+
+        <properties>
+            <!-- This property can be useful for seeing the generated SQL -->
+            <property name="eclipselink.logging.level.sql" value="FINE"/>
+            <property name="eclipselink.logging.parameters" value="true"/>
+
+            <!--
+              ======================================================================
+              == SOLUTION: Add this property for automatic schema generation.    ==
+              ======================================================================
+              This tells the JPA provider (EclipseLink) to create the necessary
+              database tables if they don't already exist when the application starts.
+              Other possible values are "drop-and-create", "drop", and "none".
+              "create" is safe as it won't drop existing tables.
+            -->
+           <property name="javax.persistence.schema-generation.database.action" value="none"/>
+
+        </properties>
+    </persistence-unit>
+</persistence>
