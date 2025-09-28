@@ -42,33 +42,6 @@ public class MockConfigService {
         }
     }
 
-   /* public String findResponse(String urlPattern, String requestPayload) {
-        // --- SOLUTION: Normalize the incoming JSON before searching ---
-        String payloadToSearch = JsonUtil.normalize(requestPayload);
-        // --- End of change ---
-
-        TypedQuery<String> query;
-        if (payloadToSearch == null) {
-            query = em.createQuery(
-                    "SELECT m.responsePayload FROM MockConfig m WHERE m.urlPattern = :urlPattern AND m.requestPayload IS NULL", String.class);
-            query.setParameter("urlPattern", urlPattern);
-        } else {
-            query = em.createQuery(
-                    "SELECT m.responsePayload FROM MockConfig m WHERE m.urlPattern = :urlPattern AND CAST(m.requestPayload AS VARCHAR2(4000)) = :payload", String.class);
-            query.setParameter("urlPattern", urlPattern);
-            query.setParameter("payload", payloadToSearch);
-        }
-
-        try {
-            return query.getSingleResult();
-        } catch (NoResultException e) {
-            LOGGER.log(Level.FINE, "No mock configuration found for URL pattern: {0} and payload: {1}", new Object[]{urlPattern, payloadToSearch});
-            return null;
-        } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "Error finding mock response for URL pattern: " + urlPattern, ex);
-            return null;
-        }
-    }*/
 
     /**
      * Finds a mock configuration based on the URL pattern and request body.
