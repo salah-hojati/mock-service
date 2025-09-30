@@ -12,23 +12,34 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Named
 @ViewScoped
 public class MockConfigBean2 implements Serializable {
+    private static final Logger LOGGER = Logger.getLogger(MockConfigBean2.class.getName());
 
     @Inject
     private MockConfigService2 mockConfigService;
 
-    private List<MockConfig2> configs;
+    private List<MockConfig2> configs = new ArrayList<>();
     private MockConfig2 selectedConfig;
     private String generatedCurlCommand;
 
+
     @PostConstruct
     public void init() {
-        this.configs = mockConfigService.findAll();
+        try {
+            this.configs = mockConfigService.findAll();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Failed to load mock configurations for Bean2", e);
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                    "Error Loading Data", "Could not retrieve configurations."));
+        }
     }
 
     public void openNew() {

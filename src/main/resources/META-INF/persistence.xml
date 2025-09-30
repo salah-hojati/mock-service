@@ -8,8 +8,12 @@
         <!-- The JNDI name of the DataSource you configured in WebLogic -->
         <jta-data-source>jdbc/myMockDS</jta-data-source>
 
-        <!-- List your entity classes here -->
+
         <class>org.example.mock.entity.MockConfig</class>
+        <class>org.example.mock.entity.MockConfig2</class>
+        <class>org.example.mock.entity.GatewayConfig</class>
+        <class>org.example.mock.entity.GatewayLog</class>
+
 
         <properties>
             <!-- This property can be useful for seeing the generated SQL -->

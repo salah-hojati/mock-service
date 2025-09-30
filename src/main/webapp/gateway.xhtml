@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+   <title>Gateway / Proxy Configuration</title>
+   <style>
+      .ui-datatable textarea, .ui-dialog textarea { width: 95% !important; }
+      .log-panel .ui-panel-title { font-size: 1.1em; }
+      .log-panel .ui-panel-content { background-color: #f9f9f9; border-top: 1px solid #ccc; }
+      .log-label { font-weight: bold; color: #333; }
+      pre { background: #2d2d2d; color: #ccc; padding: 10px; border-radius: 4px; white-space: pre-wrap; word-break: break-all; }
+   </style>
+</h:head>
+
+<h:body>
+   <div class="card">
+      <h:form id="form">
+         <p:growl id="messages" showDetail="true"/>
+
+         <p:toolbar>
+            <p:toolbarGroup>
+               <p:commandButton value="New Rule" icon="pi pi-plus" actionListener="#{gatewayBean.openNew}"
+                                update=":dialog-form:manage-gateway-content"
+                                oncomplete="PF('manageGatewayDialog').show()"/>
+            </p:toolbarGroup>
+         </p:toolbar>
+
+         <p:dataTable id="dt-configs" widgetVar="dtConfigs" var="config" value="#{gatewayBean.configs}"
+                      selectionMode="single" selection="#{gatewayBean.selectedConfig}" rowKey="#{config.id}"
+                      rows="10" paginator="true" paginatorPosition="bottom">
+
+            <p:ajax event="rowSelect" update=":dialog-form:manage-gateway-content" oncomplete="PF('manageGatewayDialog').show()"/>
+
+            <p:column headerText="ID" sortBy="#{config.id}" style="width:4rem"><h:outputText value="#{config.id}"/></p:column>
+            <p:column headerText="Enabled" sortBy="#{config.enabled}" style="width:6rem">
+               <p:toggleSwitch value="#{config.enabled}" disabled="true"/>
+            </p:column>
+            <p:column headerText="Source URL Pattern" sortBy="#{config.sourceUrlPattern}">
+               <h:outputText value="/api/gateway/#{config.sourceUrlPattern}"/>
+            </p:column>
+            <p:column headerText="Target Base URL" sortBy="#{config.targetBaseUrl}"><h:outputText value="#{config.targetBaseUrl}"/></p:column>
+            <p:column headerText="Description"><h:outputText value="#{config.description}"/></p:column>
+            <p:column style="width:6rem;text-align: center">
+               <p:commandButton icon="pi pi-list" title="View Logs"
+                                actionListener="#{gatewayBean.viewLogs(config)}"
+                                update=":log-dialog-form:log-dialog-content"
+                                oncomplete="PF('logDialog').show()"
+                                styleClass="rounded-button ui-button-secondary"/>
+            </p:column>
+            <p:column style="width:6rem;text-align: center">
+               <p:commandButton icon="pi pi-code" title="Generate Curl Command"
+                                actionListener="#{gatewayBean.generateCurl(config)}"
+                                update=":curl-dialog-form:curl-dialog-content"
+                                oncomplete="PF('curlDialog').show()"
+                                styleClass="rounded-button ui-button-info"/>
+            </p:column>
+         </p:dataTable>
+      </h:form>
+
+      <!-- Dialog for Editing/Creating Rules -->
+      <h:form id="dialog-form">
+         <p:dialog header="Gateway Rule Details" widgetVar="manageGatewayDialog" modal="true" width="700" showEffect="fade" hideEffect="fade" resizable="false">
+            <p:outputPanel id="manage-gateway-content" class="ui-fluid">
+               <p:outputPanel rendered="#{not empty gatewayBean.selectedConfig}">
+                  <div class="p-field">
+                     <p:outputLabel for="enabled">Enabled</p:outputLabel>
+                     <p:toggleSwitch id="enabled" value="#{gatewayBean.selectedConfig.enabled}" />
+                  </div>
+                  <div class="p-field">
+                     <p:outputLabel for="sourcePattern">Source URL Pattern</p:outputLabel>
+                     <p:inputText id="sourcePattern" value="#{gatewayBean.selectedConfig.sourceUrlPattern}" required="true"
+                                  placeholder="e.g., users/find/123"/>
+                     <small>The path that comes after <code>/api/gateway/</code></small>
+                  </div>
+                  <div class="p-field">
+                     <p:outputLabel for="targetUrl">Target Base URL</p:outputLabel>
+                     <p:inputText id="targetUrl" value="#{gatewayBean.selectedConfig.targetBaseUrl}" required="true"
+                                  placeholder="e.g., http://real-service.com/api"/>
+                     <small>The base URL of the real service to call.</small>
+                  </div>
+                  <div class="p-field">
+                     <p:outputLabel for="description">Description</p:outputLabel>
+                     <p:inputTextarea id="description" value="#{gatewayBean.selectedConfig.description}" rows="3"/>
+                  </div>
+               </p:outputPanel>
+            </p:outputPanel>
+
+            <f:facet name="footer">
+               <p:commandButton value="Save" icon="pi pi-check" actionListener="#{gatewayBean.saveConfig}" process="manage-gateway-content @this"/>
+               <p:commandButton value="Delete" icon="pi pi-trash" styleClass="ui-button-danger"
+                                actionListener="#{gatewayBean.deleteConfig}" update=":form:dt-configs"
+                                process="@this" oncomplete="PF('manageGatewayDialog').hide()"
+                                rendered="#{not empty gatewayBean.selectedConfig.id}">
+                  <p:confirm header="Confirmation" message="Delete this rule? (Logs will NOT be deleted)" icon="pi pi-exclamation-triangle"/>
+               </p:commandButton>
+               <p:commandButton value="Cancel" icon="pi pi-times" onclick="PF('manageGatewayDialog').hide()" class="ui-button-secondary"/>
+            </f:facet>
+         </p:dialog>
+      </h:form>
+
+      <!--
+        ======================================================================
+        == SOLUTION: The <h:form> should wrap the <p:dialog>.               ==
+        ======================================================================
+      -->
+      <h:form id="log-dialog-form">
+         <p:dialog header="Gateway Logs for: #{gatewayBean.selectedConfig.sourceUrlPattern}" widgetVar="logDialog" modal="true" width="80%" height="700" showEffect="fade">
+            <p:outputPanel id="log-dialog-content">
+               <p:commandButton value="Clear All Logs for this Rule" icon="pi pi-trash"
+                                actionListener="#{gatewayBean.clearLogs}"
+                                styleClass="ui-button-danger"
+                                rendered="#{not empty gatewayBean.selectedConfigLogs}">
+                  <p:confirm header="Confirm" message="Are you sure you want to delete all logs for this rule?"/>
+               </p:commandButton>
+               <p:dataTable var="log" value="#{gatewayBean.selectedConfigLogs}" rows="5"  rowKey="#{log.id}"  paginator="true" paginatorPosition="bottom"
+                            emptyMessage="No logs found for this gateway rule.">
+                   <p:column headerText="Log ID" sortBy="#{log.id}" style="width:5rem; text-align:center;">
+                       <h:outputText value="#{log.id}"/>
+                   </p:column>
+                  <p:column headerText="Timestamp" sortBy="#{log.timestamp}" style="width:150px"><h:outputText value="#{log.timestamp}"><f:convertDateTime type="localDateTime" pattern="yyyy-MM-dd HH:mm:ss"/></h:outputText></p:column>
+                  <p:column headerText="Method" sortBy="#{log.requestMethod}" style="width:80px"><h:outputText value="#{log.requestMethod}"/></p:column>
+                  <p:column headerText="Status" sortBy="#{log.responseStatusCode}" style="width:70px"><h:outputText value="#{log.responseStatusCode}"/></p:column>
+                  <p:column headerText="Duration" sortBy="#{log.durationMs}" style="width:90px"><h:outputText value="#{log.durationMs} ms"/></p:column>
+
+                  <!--
+                    ======================================================================
+                    == CODE QUALITY: You have both a row toggler and a details button.  ==
+                    == Let's remove the row toggler as it's not being used.           ==
+                    ======================================================================
+                  -->
+                  <!-- <p:column type="rowtoggler" style="width: 3rem"/> -->
+
+                   <p:column headerText="Details" style="width:5rem; text-align:center;">
+                       <p:commandButton icon="pi pi-search" title="View Full Details"
+                                        actionListener="#{gatewayBean.viewLogDetails(log)}"
+                                        process="@form"
+                                        update=":log-detail-dialog-form:log-detail-content"
+                                        oncomplete="PF('logDetailDialog').show()"
+                                        styleClass="rounded-button ui-button-info"/>
+                   </p:column>
+               </p:dataTable>
+            </p:outputPanel>
+         </p:dialog>
+      </h:form>
+
+      <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+         <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes"/>
+         <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+      </p:confirmDialog>
+   </div>
+
+   <!-- Dialog to display the curl command -->
+   <h:form id="curl-dialog-form">
+      <p:dialog header="Example Curl Commands" widgetVar="curlDialog" modal="true" width="700" showEffect="fade">
+         <p:outputPanel id="curl-dialog-content">
+            <p>You can use the following templates to test this gateway endpoint:</p>
+            <pre>#{gatewayBean.generatedCurlCommand}</pre>
+         </p:outputPanel>
+         <f:facet name="footer">
+            <p:commandButton value="Close" icon="pi pi-times" onclick="PF('curlDialog').hide()" class="ui-button-secondary"/>
+         </f:facet>
+      </p:dialog>
+   </h:form>
+
+    <h:form id="log-detail-dialog-form">
+        <p:dialog header="Gateway Log Details" widgetVar="logDetailDialog" modal="true" width="70%" resizable="false">
+            <p:outputPanel id="log-detail-content" >
+                <p:panelGrid columns="1" layout="grid" styleClass="log-panel">
+                    <p:panel header="Request Details">
+                        <h:panelGrid columns="2" cellpadding="7">
+                            <h:outputText value="URL:" styleClass="log-label"/>
+                            <h:outputText value="#{gatewayBean.detailedLog.requestUrl}" style="word-break: break-all;"/>
+
+                            <h:outputText value="Headers:" styleClass="log-label" style="vertical-align: top;"/>
+                            <pre>#{gatewayBean.detailedLog.requestHeaders}</pre>
+
+                            <h:outputText value="Body:" styleClass="log-label" style="vertical-align: top;"/>
+                            <pre>#{empty gatewayBean.detailedLog.requestBody ? '[No Body]' : gatewayBean.detailedLog.requestBody}</pre>
+                        </h:panelGrid>
+                    </p:panel>
+                    <p:panel header="Response Details">
+                        <h:panelGrid columns="2" cellpadding="7">
+                            <h:outputText value="Headers:" styleClass="log-label" style="vertical-align: top;"/>
+                            <pre>#{gatewayBean.detailedLog.responseHeaders}</pre>
+
+                            <h:outputText value="Body:" styleClass="log-label" style="vertical-align: top;"/>
+                            <pre>#{empty gatewayBean.detailedLog.responseBody ? '[No Body]' : gatewayBean.detailedLog.responseBody}</pre>
+                        </h:panelGrid>
+                    </p:panel>
+                </p:panelGrid>
+            </p:outputPanel>
+            <f:facet name="footer">
+                <p:commandButton value="Close" icon="pi pi-times" onclick="PF('logDetailDialog').hide()" class="ui-button-secondary"/>
+            </f:facet>
+        </p:dialog>
+    </h:form>
+
+</h:body>
+</html>

@@ -49,6 +49,12 @@
             <p:column headerText="URL Pattern" sortBy="#{config.urlPattern}">
                <h:outputText value="#{config.urlPattern}"/>
             </p:column>
+
+            <!-- ADD THIS COLUMN TO THE DATATABLE -->
+            <p:column headerText="Captured Request">
+               <p:inputTextarea readonly="true" rows="3" value="#{config.capturedRequestPayload}" style="border:none;"/>
+            </p:column>
+
             <p:column headerText="Response Payload">
                <p:inputTextarea readonly="true" rows="3" value="#{config.responsePayload}" style="border:none;"/>
             </p:column>
@@ -84,6 +90,14 @@
                         <p:outputLabel for="urlPattern">URL Pattern</p:outputLabel>
                         <p:inputText id="urlPattern" value="#{mockConfigBean2.selectedConfig.urlPattern}" required="true"/>
                      </div>
+
+                     <!-- ADD THIS FIELD TO THE DIALOG (READ-ONLY) -->
+                     <div class="p-field">
+                        <p:outputLabel for="capturedPayload">Captured Request Payload (Last Call)</p:outputLabel>
+                        <p:inputTextarea id="capturedPayload" value="#{mockConfigBean2.selectedConfig.capturedRequestPayload}"
+                                         readonly="true" rows="6" cols="80" autoResize="false"/>
+                     </div>
+
                      <div class="p-field">
                         <p:outputLabel for="responsePayload">Response Payload (Output)</p:outputLabel>
                         <p:inputTextarea id="responsePayload" value="#{mockConfigBean2.selectedConfig.responsePayload}"
@@ -106,7 +120,8 @@
             </p:outputPanel>
 
             <f:facet name="footer">
-               <p:commandButton value="Save" icon="pi pi-check" actionListener="#{mockConfigBean2.saveConfig}"
+               <p:commandButton value="Save" icon="pi pi-check"
+                                actionListener="#{mockConfigBean2.saveConfig}"
                                 update=":form:dt-configs :form:messages"
                                 oncomplete="if (!args.validationFailed) { PF('manageConfigDialog').hide(); }"
                                 process="manage-config-content @this"/>

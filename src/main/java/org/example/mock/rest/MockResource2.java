@@ -7,7 +7,6 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Path("/mock2")
@@ -22,39 +21,47 @@ public class MockResource2 {
     @Path("/{urlPattern:.+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public Response handleMockGet(@PathParam("urlPattern") String urlPattern) {
-        return handleMockRequest("GET", urlPattern);
+        // Pass null for the request body
+        return handleMockRequest("GET", urlPattern, null);
     }
 
     @POST
     @Path("/{urlPattern:.+}")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-    public Response handleMockPost(@PathParam("urlPattern") String urlPattern) {
-        return handleMockRequest("POST", urlPattern);
+    public Response handleMockPost(@PathParam("urlPattern") String urlPattern, String requestBody) {
+        // Pass the captured request body
+        return handleMockRequest("POST", urlPattern, requestBody);
     }
 
     @PUT
     @Path("/{urlPattern:.+}")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-    public Response handleMockPut(@PathParam("urlPattern") String urlPattern) {
-        return handleMockRequest("PUT", urlPattern);
+    public Response handleMockPut(@PathParam("urlPattern") String urlPattern, String requestBody) {
+        // Pass the captured request body
+        return handleMockRequest("PUT", urlPattern, requestBody);
     }
 
     @DELETE
     @Path("/{urlPattern:.+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public Response handleMockDelete(@PathParam("urlPattern") String urlPattern) {
-        return handleMockRequest("DELETE", urlPattern);
+        // Pass null for the request body
+        return handleMockRequest("DELETE", urlPattern, null);
     }
 
     /**
-     * Central logic to find and process a mock request.
+     * Central logic to find, process, and update a mock request with the captured body.
      */
-    private Response handleMockRequest(String httpMethod, String urlPattern) {
+    private Response handleMockRequest(String httpMethod, String urlPattern, String requestBody) {
         MockConfig2 mock = mockConfigService.findMockConfig(httpMethod, urlPattern);
 
         if (mock != null) {
+            // Capture the request body and save it
+            mock.setCapturedRequestPayload(requestBody);
+            mockConfigService.save(mock); // Use the existing save method to update the entity
+
             // Delay Logic
             Integer delay = mock.getDelayMs();
             if (delay != null && delay > 0) {

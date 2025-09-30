@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -27,7 +28,7 @@ public class MockConfigBean implements Serializable {
     @Inject
     private MockConfigService mockConfigService;
 
-    private List<MockConfig> configs;
+    private List<MockConfig> configs= new ArrayList<>();;
     private MockConfig selectedConfig;
     private String generatedCurlCommand;
 
@@ -36,9 +37,15 @@ public class MockConfigBean implements Serializable {
 
     @PostConstruct
     public void init() {
-        this.configs = mockConfigService.findAll();
+        try {
+            this.configs = mockConfigService.findAll();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Failed to load mock configurations", e);
+            // Add an error message for the user
+            addErrorMessage("Error Loading Data", "Could not retrieve configurations. See server logs for details.");
+            // The 'configs' list is already an empty list, so the page won't crash.
+        }
     }
-
     public void openNew() {
         this.selectedConfig = new MockConfig();
         // This command ensures the dialog form is truly empty

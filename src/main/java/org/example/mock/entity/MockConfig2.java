@@ -23,6 +23,11 @@ public class MockConfig2 implements Serializable {
     @Column(name = "RESPONSE_PAYLOAD", nullable = false)
     private String responsePayload;
 
+    // ADD THIS FIELD
+    @Lob
+    @Column(name = "CAPTURED_REQUEST_PAYLOAD")
+    private String capturedRequestPayload;
+
     @Min(0)
     @Column(name = "DELAY_MS", nullable = false)
     private Integer delayMs = 0;
@@ -48,6 +53,10 @@ public class MockConfig2 implements Serializable {
     public void setHttpStatusCode(Integer httpStatusCode) { this.httpStatusCode = httpStatusCode; }
     public String getHttpMethod() { return httpMethod; }
     public void setHttpMethod(String httpMethod) { this.httpMethod = httpMethod; }
+
+    // ADD GETTER AND SETTER FOR THE NEW FIELD
+    public String getCapturedRequestPayload() { return capturedRequestPayload; }
+    public void setCapturedRequestPayload(String capturedRequestPayload) { this.capturedRequestPayload = capturedRequestPayload; }
 
     @Override
     public boolean equals(Object o) {
