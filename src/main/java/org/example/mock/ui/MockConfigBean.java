@@ -31,7 +31,7 @@ public class MockConfigBean implements Serializable {
     private List<MockConfig> configs= new ArrayList<>();;
     private MockConfig selectedConfig;
     private String generatedCurlCommand;
-
+    private String curlCommandToCopy;
     // List of HTTP methods for the dropdown
     private final List<String> httpMethods = Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH");
 
@@ -92,12 +92,14 @@ public class MockConfigBean implements Serializable {
         }
     }
 
-    // ===================== SOLUTION IS HERE =====================
-    /**
-     * Generates a dynamic curl command based on the mock configuration's HTTP method.
-     * @param config The MockConfig to generate the command for.
-     */
-    public void generateCurl(MockConfig config) {
+
+    public void generateCurl() {
+        if (this.selectedConfig == null) {
+            LOGGER.warning("generateCurl() was called but selectedConfig is null. This indicates a mismatch between the dataTable 'var' and the f:setPropertyActionListener 'value'.");
+            this.generatedCurlCommand = "# Error: No configuration was selected to generate the command.";
+            this.curlCommandToCopy = this.generatedCurlCommand;
+            return;
+        }
         FacesContext context = FacesContext.getCurrentInstance();
         HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 
@@ -108,8 +110,8 @@ public class MockConfigBean implements Serializable {
                 request.getServerPort(),
                 request.getContextPath());
 
-        String fullUrl = String.format("%s/api/mock/%s", baseUrl, config.getUrlPattern());
-        String httpMethod = config.getHttpMethod().toUpperCase();
+        String fullUrl = String.format("%s/api/mock/%s", baseUrl, this.selectedConfig .getUrlPattern());
+        String httpMethod = this.selectedConfig .getHttpMethod().toUpperCase();
 
         StringBuilder curl = new StringBuilder("curl -i -X ");
         curl.append(httpMethod).append(" "); // Use the dynamic method
@@ -122,15 +124,16 @@ public class MockConfigBean implements Serializable {
             curl.append(" \\\n"); // Add line break for readability
             curl.append("-H 'Content-Type: application/json'");
 
-            if (config.getRequestPayload() != null && !config.getRequestPayload().isEmpty()) {
+            if (this.selectedConfig .getRequestPayload() != null && !this.selectedConfig .getRequestPayload().isEmpty()) {
                 // Escape single quotes in the JSON payload for shell safety
-                String escapedPayload = config.getRequestPayload().replace("'", "'\\''");
+                String escapedPayload = this.selectedConfig .getRequestPayload().replace("'", "'\\''");
                 curl.append(" \\\n");
                 curl.append("-d '").append(escapedPayload).append("'");
             }
         }
+        this.curlCommandToCopy = curl.toString();;
+        this.generatedCurlCommand = curl.toString();;
 
-        this.generatedCurlCommand = curl.toString();
     }
     // ============================================================
 
@@ -140,6 +143,14 @@ public class MockConfigBean implements Serializable {
 
     private void addErrorMessage(String summary, String detail) {
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, summary, detail));
+    }
+
+    public String getCurlCommandToCopy() {
+        return curlCommandToCopy;
+    }
+
+    public void setCurlCommandToCopy(String curlCommandToCopy) {
+        this.curlCommandToCopy = curlCommandToCopy;
     }
 
     // Getters and Setters

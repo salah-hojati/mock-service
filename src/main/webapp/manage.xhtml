@@ -6,6 +6,36 @@
 
 <h:head>
     <title>Mock Service Configuration</title>
+    <script type="text/javascript">
+        // --- SOLUTION: The function now accepts the ID of a hidden input ---
+        function copyFromHiddenInput(elementId) {
+            // Find the hidden input element by its ID
+            const hiddenInputElement = document.getElementById(elementId);
+            if (!hiddenInputElement) {
+                console.error('Could not find element with ID:', elementId);
+                return;
+            }
+
+            const textToCopy = hiddenInputElement.value;
+
+            navigator.clipboard.writeText(textToCopy).then(function () {
+                PF('copyGrowl').show([{
+                    summary: 'Copied to Clipboard',
+                    detail: 'The content has been copied successfully.',
+                    severity: 'info'
+                }]);
+            }, function (err) {
+                PF('copyGrowl').show([{
+                    summary: 'Copy Failed',
+                    detail: 'Could not copy content to clipboard. See console for details.',
+                    severity: 'error'
+                }]);
+                console.error('Could not copy text: ', err);
+            });
+        }
+
+
+    </script>
     <style type="text/css">
 
         /* --- General Page Scrolling --- */
@@ -42,6 +72,8 @@
 </h:head>
 
 <h:body>
+    <p:growl widgetVar="copyGrowl" for="copy-messages" showDetail="true" life="2000"/>
+    <h:panelGroup id="copy-messages"/>
     <div class="card">
         <h:form id="form">
             <p:growl id="messages" showDetail="true"/>
@@ -83,10 +115,12 @@
                 </p:column>
                 <p:column style="width:8rem;text-align: center">
                     <p:commandButton icon="pi pi-code" title="Generate Curl Command"
-                                     actionListener="#{mockConfigBean.generateCurl(config)}"
-                                     update=":form:curl-dialog-content"
+                                     actionListener="#{mockConfigBean.generateCurl}"
+                                     update=":form:curl-dialog-content :form:hiddenCurlCommand"
                                      oncomplete="PF('curlDialog').show()"
-                                     styleClass="rounded-button ui-button-secondary"/>
+                                     styleClass="rounded-button ui-button-secondary">
+                        <f:setPropertyActionListener value="#{config}" target="#{mockConfigBean.selectedConfig}"/>
+                    </p:commandButton>
                 </p:column>
 
             </p:dataTable>
@@ -171,6 +205,9 @@
                     </div>
                 </p:outputPanel>
                 <f:facet name="footer">
+                    <p:commandButton value="Copy Command" icon="pi pi-copy" type="button"
+                                     onclick="copyFromHiddenInput('form:hiddenCurlCommand')"
+                                     styleClass="ui-button-info"/>
                     <p:commandButton value="Close" icon="pi pi-times" onclick="PF('curlDialog').hide()"
                                      class="ui-button-secondary"/>
                 </f:facet>
@@ -180,6 +217,8 @@
                 <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes"/>
                 <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
             </p:confirmDialog>
+
+            <h:inputHidden id="hiddenCurlCommand" value="#{mockConfigBean.curlCommandToCopy}"/>
         </h:form>
     </div>
 </h:body>

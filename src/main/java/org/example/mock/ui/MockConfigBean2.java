@@ -23,12 +23,16 @@ import java.util.logging.Logger;
 public class MockConfigBean2 implements Serializable {
     private static final Logger LOGGER = Logger.getLogger(MockConfigBean2.class.getName());
 
+    // This could be a static final constant for a minor performance gain.
+    private static final List<String> HTTP_METHODS = Arrays.asList("GET", "POST", "PUT", "DELETE");
+
     @Inject
     private MockConfigService2 mockConfigService;
 
     private List<MockConfig2> configs = new ArrayList<>();
     private MockConfig2 selectedConfig;
     private String generatedCurlCommand;
+    private String curlCommandToCopy;
 
 
     @PostConstruct
@@ -49,7 +53,7 @@ public class MockConfigBean2 implements Serializable {
     public void saveConfig() {
         try {
             mockConfigService.save(this.selectedConfig);
-            this.configs = mockConfigService.findAll(); // Refresh list
+            this.configs = mockConfigService.findAll(); // Refresh list from DB
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Configuration Saved"));
             PrimeFaces.current().ajax().addCallbackParam("validationFailed", false);
         } catch (Exception e) {
@@ -59,36 +63,43 @@ public class MockConfigBean2 implements Serializable {
     }
 
     public void deleteConfig() {
-        mockConfigService.delete(this.selectedConfig);
-        this.configs.remove(this.selectedConfig);
-        this.selectedConfig = null;
-        FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Configuration Deleted"));
+        try {
+            mockConfigService.delete(this.selectedConfig);
+            this.configs = mockConfigService.findAll(); // IMPROVEMENT: Refresh list from DB for consistency.
+            this.selectedConfig = null;
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Configuration Deleted"));
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Failed to delete configuration", e);
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Delete Error", "Could not delete the selected configuration."));
+        }
     }
 
-    public void generateCurl(MockConfig2 config) {
+    public void generateCurl() {
+        if (this.selectedConfig == null) {
+            LOGGER.warning("generateCurl() was called but selectedConfig is null. This indicates a mismatch between the dataTable 'var' and the f:setPropertyActionListener 'value'.");
+            this.generatedCurlCommand = "# Error: No configuration was selected to generate the command.";
+            this.curlCommandToCopy = this.generatedCurlCommand;
+            return;
+        }
         FacesContext context = FacesContext.getCurrentInstance();
         HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 
-        // Dynamically construct the base URL (e.g., http://localhost:7001/mock-service)
         String baseUrl = String.format("%s://%s:%d%s",
                 request.getScheme(),
                 request.getServerName(),
                 request.getServerPort(),
                 request.getContextPath());
 
-        // Use the '/api/mock2/' path for this version
-        String fullUrl = String.format("%s/api/mock2/%s", baseUrl, config.getUrlPattern());
-        String httpMethod = config.getHttpMethod().toUpperCase();
+        String fullUrl = String.format("%s/api/mock2/%s", baseUrl, this.selectedConfig.getUrlPattern());
+        String httpMethod = this.selectedConfig.getHttpMethod().toUpperCase();
 
-        // Since this version doesn't handle request bodies, the command is simpler.
-        // The -i flag is added to include response headers, which is useful for debugging.
         String command = String.format("curl -i -X %s '%s'", httpMethod, fullUrl);
-
+        this.curlCommandToCopy = command;
         this.generatedCurlCommand = command;
     }
 
     public List<String> getHttpMethods() {
-        return Arrays.asList("GET", "POST", "PUT", "DELETE");
+        return HTTP_METHODS;
     }
 
     // Getters and Setters
@@ -101,10 +112,21 @@ public class MockConfigBean2 implements Serializable {
     }
 
     public void setSelectedConfig(MockConfig2 selectedConfig) {
+        // You can add a log here for debugging if you want:
+        // LOGGER.info("setSelectedConfig called with: " + (selectedConfig != null ? selectedConfig.getId() : "null"));
         this.selectedConfig = selectedConfig;
     }
 
     public String getGeneratedCurlCommand() {
         return generatedCurlCommand;
+    }
+
+    public String getCurlCommandToCopy() {
+        return curlCommandToCopy;
+    }
+
+    // IMPROVEMENT: Added the missing setter for curlCommandToCopy.
+    public void setCurlCommandToCopy(String curlCommandToCopy) {
+        this.curlCommandToCopy = curlCommandToCopy;
     }
 }
