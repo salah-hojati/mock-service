@@ -7,6 +7,18 @@
 <h:head>
    <title>Mock Service Configuration (No Request Body)</title>
    <style type="text/css">
+      /* --- General Page Scrolling --- */
+      /* This ensures the main body has a scrollbar if content is too long */
+      body {
+         overflow-y: scroll;
+      }
+
+      /* --- Reusable CSS for Dialog Scrolling --- */
+      .dialog-scrollable-content {
+         max-height: 70vh; /* Max height is 70% of the browser window height */
+         overflow-y: auto; /* Add vertical scrollbar only when needed */
+         padding-right: 10px; /* Prevent scrollbar from overlapping content */
+      }
       .ui-datatable textarea { width: 95% !important; }
       .ui-dialog textarea { width: 95% !important; }
       .curl-command {
@@ -77,7 +89,7 @@
          <!-- Dialog for Editing/Creating -->
          <p:dialog header="Configuration Details" widgetVar="manageConfigDialog" modal="true" showEffect="fade"
                    hideEffect="fade" resizable="false">
-            <p:outputPanel id="dialogContentWrapper">
+            <p:outputPanel id="dialogContentWrapper" styleClass="dialog-scrollable-content">
                <p:outputPanel id="manage-config-content" class="ui-fluid">
                   <p:outputPanel rendered="#{not empty mockConfigBean2.selectedConfig}">
                      <div class="p-field">
@@ -139,7 +151,7 @@
 
          <!-- Dialog to display the curl command -->
          <p:dialog header="Curl Command" widgetVar="curlDialog" modal="true" width="600" showEffect="fade" hideEffect="fade">
-            <p:outputPanel id="curl-dialog-content">
+            <p:outputPanel id="curl-dialog-content" styleClass="dialog-scrollable-content">
                <p>You can use the following command to test this mock endpoint:</p>
                <div class="curl-command">
                   <h:outputText value="#{mockConfigBean2.generatedCurlCommand}"/>
