@@ -237,22 +237,35 @@
             <p:panelGrid columns="1" layout="grid" styleClass="ui-noborder">
                <p:panel header="Request Details">
                   <p:panelGrid columns="3" layout="grid" styleClass="ui-noborder" columnClasses="ui-g-2,ui-g-9,ui-g-1">
+
+                     <!-- URL -->
                      <h:outputText value="URL:" styleClass="log-label"/>
-                     <h:outputText value="#{gatewayBean.detailedLog.requestUrl}" style="word-break: break-all;"/>
+                     <div>
+                        <h:outputText value="#{gatewayBean.detailedLog.requestUrl}" style="word-break: break-all;"/>
+                        <h:inputHidden id="hiddenUrl" value="#{gatewayBean.detailedLog.requestUrl}" />
+                     </div>
                      <p:commandButton icon="pi pi-copy" title="Copy URL" type="button"
-                                      onclick="copyToClipboard('#{gatewayBean.detailedLog.requestUrl}')"
+                                      onclick="copyFromHiddenInput('#{component.parent.parent.clientId}:hiddenUrl')"
                                       styleClass="ui-button-flat ui-button-secondary"/>
 
+                     <!-- Request Headers -->
                      <h:outputText value="Headers:" styleClass="log-label" style="vertical-align: top;"/>
-                     <pre>#{gatewayBean.detailedLog.requestHeaders}</pre>
+                     <div>
+                        <pre>#{gatewayBean.detailedLog.requestHeaders}</pre>
+                        <h:inputHidden id="hiddenReqHeaders" value="#{gatewayBean.detailedLog.requestHeaders}" />
+                     </div>
                      <p:commandButton icon="pi pi-copy" title="Copy Headers" type="button"
-                                      onclick="copyToClipboard('#{gatewayBean.detailedLog.requestHeaders}')"
+                                      onclick="copyFromHiddenInput('#{component.parent.parent.clientId}:hiddenReqHeaders')"
                                       styleClass="ui-button-flat ui-button-secondary"/>
 
+                     <!-- Request Body -->
                      <h:outputText value="Body:" styleClass="log-label" style="vertical-align: top;"/>
-                     <pre>#{empty gatewayBean.detailedLog.requestBody ? '[No Body]' : gatewayBean.detailedLog.requestBody}</pre>
+                     <div>
+                        <pre>#{empty gatewayBean.detailedLog.requestBody ? '[No Body]' : gatewayBean.detailedLog.requestBody}</pre>
+                        <h:inputHidden id="hiddenReqBody" value="#{gatewayBean.detailedLog.requestBody}" />
+                     </div>
                      <p:commandButton icon="pi pi-copy" title="Copy Body" type="button"
-                                      onclick="copyToClipboard('#{gatewayBean.detailedLog.requestBody}')"
+                                      onclick="copyFromHiddenInput('#{component.parent.parent.clientId}:hiddenReqBody')"
                                       rendered="#{not empty gatewayBean.detailedLog.requestBody}"
                                       styleClass="ui-button-flat ui-button-secondary"/>
                   </p:panelGrid>
@@ -260,16 +273,25 @@
 
                <p:panel header="Response Details">
                   <p:panelGrid columns="3" layout="grid" styleClass="ui-noborder" columnClasses="ui-g-2,ui-g-9,ui-g-1">
+
+                     <!-- Response Headers -->
                      <h:outputText value="Headers:" styleClass="log-label" style="vertical-align: top;"/>
-                     <pre>#{gatewayBean.detailedLog.responseHeaders}</pre>
+                     <div>
+                        <pre>#{gatewayBean.detailedLog.responseHeaders}</pre>
+                        <h:inputHidden id="hiddenResHeaders" value="#{gatewayBean.detailedLog.responseHeaders}" />
+                     </div>
                      <p:commandButton icon="pi pi-copy" title="Copy Headers" type="button"
-                                      onclick="copyToClipboard('#{gatewayBean.detailedLog.responseHeaders}')"
+                                      onclick="copyFromHiddenInput('#{component.parent.parent.clientId}:hiddenResHeaders')"
                                       styleClass="ui-button-flat ui-button-secondary"/>
 
+                     <!-- Response Body -->
                      <h:outputText value="Body:" styleClass="log-label" style="vertical-align: top;"/>
-                     <pre>#{empty gatewayBean.detailedLog.responseBody ? '[No Body]' : gatewayBean.detailedLog.responseBody}</pre>
+                     <div>
+                        <pre>#{empty gatewayBean.detailedLog.responseBody ? '[No Body]' : gatewayBean.detailedLog.responseBody}</pre>
+                        <h:inputHidden id="hiddenResBody" value="#{gatewayBean.detailedLog.responseBody}" />
+                     </div>
                      <p:commandButton icon="pi pi-copy" title="Copy Body" type="button"
-                                      onclick="copyToClipboard('#{gatewayBean.detailedLog.responseBody}')"
+                                      onclick="copyFromHiddenInput('#{component.parent.parent.clientId}:hiddenResBody')"
                                       rendered="#{not empty gatewayBean.detailedLog.responseBody}"
                                       styleClass="ui-button-flat ui-button-secondary"/>
                   </p:panelGrid>
