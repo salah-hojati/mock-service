@@ -86,11 +86,12 @@
                 </p:toolbarGroup>
             </p:toolbar>
             <p:dataTable id="dt-configs" widgetVar="dtConfigs" var="config" value="#{mockConfigBean.configs}"
-                         selectionMode="single" selection="#{mockConfigBean.selectedConfig}" rowKey="#{config.id}"
+                         rowKey="#{config.id}"
                          rows="10" paginator="true" paginatorPosition="bottom">
 
 
-                <p:ajax event="rowSelect" update=":form:dialogContentWrapper"
+
+            <p:ajax event="rowSelect" update=":form:dialogContentWrapper"
                         oncomplete="PF('manageConfigDialog').show()"/>
                 <p:column headerText="Method" sortBy="#{config.httpMethod}" style="width:6rem;">
                     <h:outputText value="#{config.httpMethod}"/>
@@ -112,6 +113,14 @@
                 </p:column>
                 <p:column headerText="Status" sortBy="#{config.httpStatusCode}" style="width:6rem; text-align:center;">
                     <h:outputText value="#{config.httpStatusCode}"/>
+                </p:column>
+                <p:column style="width:6rem;text-align: center">
+                    <p:commandButton icon="pi pi-pencil" title="Edit Rule"
+                                     actionListener="#{mockConfigBean.setSelectedConfig(config)}"
+                                     update=":form:dialogContentWrapper"
+                                     oncomplete="PF('manageConfigDialog').show()"
+                                     styleClass="rounded-button ui-button-success"
+                                     process="@this"/>
                 </p:column>
                 <p:column style="width:8rem;text-align: center">
                     <p:commandButton icon="pi pi-code" title="Generate Curl Command"

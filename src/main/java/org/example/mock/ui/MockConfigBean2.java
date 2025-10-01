@@ -2,6 +2,7 @@ package org.example.mock.ui;
 
 import org.example.mock.entity.MockConfig2;
 import org.example.mock.service.MockConfigService2;
+import org.example.mock.util.JsonUtil;
 import org.primefaces.PrimeFaces;
 
 import javax.annotation.PostConstruct;
@@ -52,6 +53,10 @@ public class MockConfigBean2 implements Serializable {
 
     public void saveConfig() {
         try {
+            // Normalize JSON payloads before saving
+            this.selectedConfig.setCapturedRequestPayload(JsonUtil.normalize(this.selectedConfig.getCapturedRequestPayload()));
+            this.selectedConfig.setResponsePayload(JsonUtil.normalize(this.selectedConfig.getResponsePayload()));
+
             mockConfigService.save(this.selectedConfig);
             this.configs = mockConfigService.findAll(); // Refresh list from DB
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Configuration Saved"));
