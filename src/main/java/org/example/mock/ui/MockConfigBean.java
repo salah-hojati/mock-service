@@ -93,6 +93,43 @@ public class MockConfigBean implements Serializable {
     }
 
 
+    public void generateCurl(MockConfig selectedConfig) {
+    this.selectedConfig =mockConfigService.findById(selectedConfig.getId());
+        FacesContext context = FacesContext.getCurrentInstance();
+        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
+
+        // Construct the base URL (e.g., http://localhost:7001/mock-service)
+        String baseUrl = String.format("%s://%s:%d%s",
+                request.getScheme(),
+                request.getServerName(),
+                request.getServerPort(),
+                request.getContextPath());
+
+        String fullUrl = String.format("%s/api/mock/%s", baseUrl, this.selectedConfig .getUrlPattern());
+        String httpMethod = this.selectedConfig .getHttpMethod().toUpperCase();
+
+        StringBuilder curl = new StringBuilder("curl -i -X ");
+        curl.append(httpMethod).append(" "); // Use the dynamic method
+        curl.append("'").append(fullUrl).append("'");
+
+        // Only add Content-Type and data for methods that typically have a body
+        boolean hasBody = "POST".equals(httpMethod) || "PUT".equals(httpMethod) || "PATCH".equals(httpMethod);
+
+        if (hasBody) {
+            curl.append(" \\\n"); // Add line break for readability
+            curl.append("-H 'Content-Type: application/json'");
+
+            if (this.selectedConfig .getRequestPayload() != null && !this.selectedConfig .getRequestPayload().isEmpty()) {
+                // Escape single quotes in the JSON payload for shell safety
+                String escapedPayload = this.selectedConfig .getRequestPayload().replace("'", "'\\''");
+                curl.append(" \\\n");
+                curl.append("-d '").append(escapedPayload).append("'");
+            }
+        }
+        this.curlCommandToCopy = curl.toString();;
+        this.generatedCurlCommand = curl.toString();;
+
+    }
     public void generateCurl() {
         if (this.selectedConfig == null) {
             LOGGER.warning("generateCurl() was called but selectedConfig is null. This indicates a mismatch between the dataTable 'var' and the f:setPropertyActionListener 'value'.");

@@ -125,11 +125,12 @@
                 <p:column style="width:8rem;text-align: center">
 
                     <p:commandButton icon="pi pi-code" title="Generate Curl Command"
-                                     actionListener="#{mockConfigBean2.generateCurl}"
+                                     actionListener="#{mockConfigBean2.generateCurl(config)}"
                                      update=":form:curl-dialog-content :form:hiddenCurlCommand"
                                      oncomplete="PF('curlDialog').show()"
-                                     styleClass="rounded-button ui-button-secondary">
-                        <f:setPropertyActionListener value="#{config}" target="#{mockConfigBean2.selectedConfig}"/>
+                                     styleClass="rounded-button ui-button-secondary"
+                                     process="@this"
+                    >
                     </p:commandButton>
                 </p:column>
 

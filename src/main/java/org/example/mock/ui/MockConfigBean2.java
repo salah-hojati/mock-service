@@ -79,13 +79,8 @@ public class MockConfigBean2 implements Serializable {
         }
     }
 
-    public void generateCurl() {
-        if (this.selectedConfig == null) {
-            LOGGER.warning("generateCurl() was called but selectedConfig is null. This indicates a mismatch between the dataTable 'var' and the f:setPropertyActionListener 'value'.");
-            this.generatedCurlCommand = "# Error: No configuration was selected to generate the command.";
-            this.curlCommandToCopy = this.generatedCurlCommand;
-            return;
-        }
+    public void generateCurl( MockConfig2 selectedConfig) {
+      this.selectedConfig=mockConfigService.findById(selectedConfig.getId());
         FacesContext context = FacesContext.getCurrentInstance();
         HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 
@@ -102,6 +97,8 @@ public class MockConfigBean2 implements Serializable {
         this.curlCommandToCopy = command;
         this.generatedCurlCommand = command;
     }
+
+
 
     public List<String> getHttpMethods() {
         return HTTP_METHODS;

@@ -1,5 +1,6 @@
 package org.example.mock.service;
 
+import org.example.mock.entity.MockConfig;
 import org.example.mock.entity.MockConfig2;
 
 import javax.ejb.Stateless;
@@ -30,7 +31,9 @@ public class MockConfigService2 {
             em.merge(mockConfig);
         }
     }
-
+    public MockConfig2 findById(Long id) {
+        return em.find(MockConfig2.class, id);
+    }
     public void delete(MockConfig2 mockConfig) {
         if (em.contains(mockConfig)) {
             em.remove(mockConfig);

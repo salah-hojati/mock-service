@@ -124,11 +124,13 @@
                 </p:column>
                 <p:column style="width:8rem;text-align: center">
                     <p:commandButton icon="pi pi-code" title="Generate Curl Command"
-                                     actionListener="#{mockConfigBean.generateCurl}"
+                                     actionListener="#{mockConfigBean.generateCurl(config)}"
                                      update=":form:curl-dialog-content :form:hiddenCurlCommand"
                                      oncomplete="PF('curlDialog').show()"
-                                     styleClass="rounded-button ui-button-secondary">
-                        <f:setPropertyActionListener value="#{config}" target="#{mockConfigBean.selectedConfig}"/>
+                                     styleClass="rounded-button ui-button-secondary"
+                                     process="@this"
+                    >
+
                     </p:commandButton>
                 </p:column>
 
@@ -154,7 +156,7 @@
                                              required="true"/>
                             </div>
                             <p:outputPanel id="requestPayloadPanel">
-                                <div class="p-field" rendered="#{mockConfigBean.isRequestBodyApplicable()}">
+                                <div class="p-field" >
                                     <p:outputLabel for="requestPayload">Request Payload (Input)</p:outputLabel>
                                     <p:inputTextarea id="requestPayload"
                                                      value="#{mockConfigBean.selectedConfig.requestPayload}" rows="10"
