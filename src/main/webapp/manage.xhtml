@@ -197,7 +197,8 @@
                     <p:commandButton value="Delete" icon="pi pi-trash" styleClass="ui-button-danger"
                                      actionListener="#{mockConfigBean.deleteConfig}"
                                      process="@this"
-                                     rendered="#{not empty mockConfigBean.selectedConfig.id}">
+
+                    >
                         <p:confirm header="Confirmation" message="Are you sure you want to delete this record?"
                                    icon="pi pi-exclamation-triangle"/>
                     </p:commandButton>
