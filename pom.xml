@@ -31,6 +31,12 @@
             <artifactId>primefaces</artifactId>
             <version>11.0.0</version> <!-- Use a version compatible with your JSF implementation -->
         </dependency>
+
+        <dependency>
+            <groupId>org.primefaces.extensions</groupId>
+            <artifactId>primefaces-extensions</artifactId>
+            <version>11.0.0</version>
+        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
