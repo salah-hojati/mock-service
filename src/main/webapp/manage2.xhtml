@@ -67,6 +67,8 @@
             white-space: pre-wrap;
             word-break: break-all;
         }
+
+
     </style>
 </h:head>
 
@@ -83,38 +85,40 @@
                 </p:toolbarGroup>
             </p:toolbar>
             <p:dataTable id="dt-configs" widgetVar="dtConfigs" var="config" value="#{mockConfigBean2.configs}"
-                         rowKey="#{config.id}"
+                         rowKey="#{config.id}" resizableColumns="true"
                          rows="10" paginator="true" paginatorPosition="bottom">
 
                 <p:ajax event="rowSelect" update=":form:dialogContentWrapper"
                         oncomplete="PF('manageConfigDialog').show()"/>
 
-                <p:column headerText="Method" sortBy="#{config.httpMethod}" style="width:6rem;">
+                <p:column headerText="Method" sortBy="#{config.httpMethod}" style="width:1rem;">
                     <h:outputText value="#{config.httpMethod}"/>
                 </p:column>
-                <p:column headerText="ID" sortBy="#{config.id}" style="width:5%">
+                <p:column headerText="ID" sortBy="#{config.id}" style="width:1rem">
                     <h:outputText value="#{config.id}"/>
                 </p:column>
-                <p:column headerText="URL Pattern" sortBy="#{config.urlPattern}">
-                    <h:outputText value="#{config.urlPattern}"/>
+                <p:column headerText="URL Pattern" sortBy="#{config.urlPattern}" style="width:10%"   >
+                    <h:outputText value="#{config.urlPattern}" id="urlText"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;"/>
+                    <p:tooltip for="urlText" value="#{config.urlPattern}"
+                               showDelay="0" hideDelay="0"/>
                 </p:column>
 
                 <!-- ADD THIS COLUMN TO THE DATATABLE -->
-                <p:column headerText="Captured Request">
+                <p:column headerText="Captured Request" style="width:40%">
                     <p:inputTextarea readonly="true" rows="3" value="#{config.capturedRequestPayload}"
                                      style="border:none;"/>
                 </p:column>
 
-                <p:column headerText="Response Payload">
+                <p:column headerText="Response Payload" style="width:40%">
                     <p:inputTextarea readonly="true" rows="3" value="#{config.responsePayload}" style="border:none;"/>
                 </p:column>
-                <p:column headerText="Delay (ms)" sortBy="#{config.delayMs}" style="width:8rem; text-align:right;">
+                <p:column headerText="Delay (ms)" sortBy="#{config.delayMs}" style="width:1rem; text-align:right;">
                     <h:outputText value="#{config.delayMs}"/>
                 </p:column>
-                <p:column headerText="Status" sortBy="#{config.httpStatusCode}" style="width:6rem; text-align:center;">
+                <p:column headerText="Status" sortBy="#{config.httpStatusCode}" style="width:1rem; text-align:center;">
                     <h:outputText value="#{config.httpStatusCode}"/>
                 </p:column>
-                <p:column style="width:6rem;text-align: center">
+                <p:column style="width:1rem;text-align: center">
                     <p:commandButton icon="pi pi-pencil" title="Edit Rule"
                                      actionListener="#{mockConfigBean2.setSelectedConfig(config)}"
                                      update=":form:dialogContentWrapper"
@@ -122,7 +126,7 @@
                                      styleClass="rounded-button ui-button-success"
                                      process="@this"/>
                 </p:column>
-                <p:column style="width:8rem;text-align: center">
+                <p:column style="width:1rem;text-align: center">
 
                     <p:commandButton icon="pi pi-code" title="Generate Curl Command"
                                      actionListener="#{mockConfigBean2.generateCurl(config)}"
