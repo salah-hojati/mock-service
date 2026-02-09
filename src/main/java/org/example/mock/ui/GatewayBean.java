@@ -68,6 +68,7 @@ public class GatewayBean implements Serializable {
 
     public void saveConfig() {
         try {
+
             gatewayService.saveConfig(this.selectedConfig);
             this.configs = gatewayService.findAllConfigs(); // Refresh list
             addInfoMessage("Gateway Rule Saved", "The configuration was saved successfully.");

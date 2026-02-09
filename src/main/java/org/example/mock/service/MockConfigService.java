@@ -25,7 +25,9 @@ public class MockConfigService {
     public List<MockConfig> findAll() {
         return em.createNamedQuery("MockConfig.findAll", MockConfig.class).getResultList();
     }
-
+    public MockConfig findById(Long id) {
+        return em.find(MockConfig.class, id);
+    }
     public void save(MockConfig mockConfig) {
         if (mockConfig.getId() == null) {
             em.persist(mockConfig);
@@ -75,4 +77,6 @@ public class MockConfigService {
             return null;
         }
     }
+
+
 }

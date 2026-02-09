@@ -6,7 +6,51 @@
 
 <h:head>
     <title>Mock Service Configuration</title>
+    <script type="text/javascript">
+        // --- SOLUTION: The function now accepts the ID of a hidden input ---
+        function copyFromHiddenInput(elementId) {
+            // Find the hidden input element by its ID
+            const hiddenInputElement = document.getElementById(elementId);
+            if (!hiddenInputElement) {
+                console.error('Could not find element with ID:', elementId);
+                return;
+            }
+
+            const textToCopy = hiddenInputElement.value;
+
+            navigator.clipboard.writeText(textToCopy).then(function () {
+                PF('copyGrowl').show([{
+                    summary: 'Copied to Clipboard',
+                    detail: 'The content has been copied successfully.',
+                    severity: 'info'
+                }]);
+            }, function (err) {
+                PF('copyGrowl').show([{
+                    summary: 'Copy Failed',
+                    detail: 'Could not copy content to clipboard. See console for details.',
+                    severity: 'error'
+                }]);
+                console.error('Could not copy text: ', err);
+            });
+        }
+
+
+    </script>
     <style type="text/css">
+
+        /* --- General Page Scrolling --- */
+        /* This ensures the main body has a scrollbar if content is too long */
+        body {
+            overflow-y: scroll;
+        }
+
+        /* --- Reusable CSS for Dialog Scrolling --- */
+        .dialog-scrollable-content {
+            max-height: 70vh; /* Max height is 70% of the browser window height */
+            overflow-y: auto; /* Add vertical scrollbar only when needed */
+            padding-right: 10px; /* Prevent scrollbar from overlapping content */
+        }
+
         .ui-datatable textarea {
             width: 95% !important;
         }
@@ -28,6 +72,8 @@
 </h:head>
 
 <h:body>
+    <p:growl widgetVar="copyGrowl" for="copy-messages" showDetail="true" life="2000"/>
+    <h:panelGroup id="copy-messages"/>
     <div class="card">
         <h:form id="form">
             <p:growl id="messages" showDetail="true"/>
@@ -40,39 +86,54 @@
                 </p:toolbarGroup>
             </p:toolbar>
             <p:dataTable id="dt-configs" widgetVar="dtConfigs" var="config" value="#{mockConfigBean.configs}"
-                         selectionMode="single" selection="#{mockConfigBean.selectedConfig}" rowKey="#{config.id}"
+                         rowKey="#{config.id}" resizableColumns="true"
                          rows="10" paginator="true" paginatorPosition="bottom">
 
 
-                <p:ajax event="rowSelect" update=":form:dialogContentWrapper"
+
+            <p:ajax event="rowSelect" update=":form:dialogContentWrapper"
                         oncomplete="PF('manageConfigDialog').show()"/>
-                <p:column headerText="Method" sortBy="#{config.httpMethod}" style="width:6rem;">
+                <p:column headerText="Method" sortBy="#{config.httpMethod}" style="width:1rem;">
                     <h:outputText value="#{config.httpMethod}"/>
                 </p:column>
-                <p:column headerText="ID" sortBy="#{config.id}" style="width:5%">
+                <p:column headerText="ID" sortBy="#{config.id}" style="width:2rem">
                     <h:outputText value="#{config.id}"/>
                 </p:column>
-                <p:column headerText="URL Pattern" sortBy="#{config.urlPattern}">
-                    <h:outputText value="#{config.urlPattern}"/>
+                <p:column headerText="URL Pattern" sortBy="#{config.urlPattern}" style="width:10%">
+                    <h:outputText value="#{config.urlPattern}" id="urlText"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;"/>
+                    <p:tooltip for="urlText" value="#{config.urlPattern}"
+                               showDelay="0" hideDelay="0"/>
                 </p:column>
-                <p:column headerText="Request Payload">
+                <p:column headerText="Request Payload" style="width:40%">
                     <p:inputTextarea readonly="true" rows="3" value="#{config.requestPayload}" style="border:none;"/>
                 </p:column>
-                <p:column headerText="Response Payload">
+                <p:column headerText="Response Payload" style="width:40%">
                     <p:inputTextarea readonly="true" rows="3" value="#{config.responsePayload}" style="border:none;"/>
                 </p:column>
-                <p:column headerText="Delay (ms)" sortBy="#{config.delayMs}" style="width:8rem; text-align:right;">
+                <p:column headerText="Delay (ms)" sortBy="#{config.delayMs}" style="width:1rem; text-align:right;">
                     <h:outputText value="#{config.delayMs}"/>
                 </p:column>
-                <p:column headerText="Status" sortBy="#{config.httpStatusCode}" style="width:6rem; text-align:center;">
+                <p:column headerText="Status" sortBy="#{config.httpStatusCode}" style="width:1rem; text-align:center;">
                     <h:outputText value="#{config.httpStatusCode}"/>
                 </p:column>
-                <p:column style="width:8rem;text-align: center">
+                <p:column style="width:1rem;text-align: center">
+                    <p:commandButton icon="pi pi-pencil" title="Edit Rule"
+                                     actionListener="#{mockConfigBean.setSelectedConfig(config)}"
+                                     update=":form:dialogContentWrapper"
+                                     oncomplete="PF('manageConfigDialog').show()"
+                                     styleClass="rounded-button ui-button-success"
+                                     process="@this"/>
+                </p:column>
+                <p:column style="width:1rem;text-align: center">
                     <p:commandButton icon="pi pi-code" title="Generate Curl Command"
                                      actionListener="#{mockConfigBean.generateCurl(config)}"
-                                     update=":form:curl-dialog-content"
+                                     update=":form:curl-dialog-content :form:hiddenCurlCommand"
                                      oncomplete="PF('curlDialog').show()"
-                                     styleClass="rounded-button ui-button-secondary"/>
+                                     styleClass="rounded-button ui-button-secondary"
+                                     process="@this"
+                    >
+
+                    </p:commandButton>
                 </p:column>
 
             </p:dataTable>
@@ -80,7 +141,7 @@
             <!-- Dialog for Editing/Creating -->
             <p:dialog header="Configuration Details" widgetVar="manageConfigDialog" modal="true" showEffect="fade"
                       hideEffect="fade" resizable="false">
-                <p:outputPanel id="dialogContentWrapper">
+                <p:outputPanel id="dialogContentWrapper" styleClass="dialog-scrollable-content">
                     <p:outputPanel id="manage-config-content" class="ui-fluid">
                         <p:outputPanel rendered="#{not empty mockConfigBean.selectedConfig}">
                             <div class="p-field">
@@ -97,7 +158,7 @@
                                              required="true"/>
                             </div>
                             <p:outputPanel id="requestPayloadPanel">
-                                <div class="p-field" rendered="#{mockConfigBean.isRequestBodyApplicable()}">
+                                <div class="p-field" >
                                     <p:outputLabel for="requestPayload">Request Payload (Input)</p:outputLabel>
                                     <p:inputTextarea id="requestPayload"
                                                      value="#{mockConfigBean.selectedConfig.requestPayload}" rows="10"
@@ -138,7 +199,8 @@
                     <p:commandButton value="Delete" icon="pi pi-trash" styleClass="ui-button-danger"
                                      actionListener="#{mockConfigBean.deleteConfig}"
                                      process="@this"
-                                     rendered="#{not empty mockConfigBean.selectedConfig.id}">
+
+                    >
                         <p:confirm header="Confirmation" message="Are you sure you want to delete this record?"
                                    icon="pi pi-exclamation-triangle"/>
                     </p:commandButton>
@@ -150,13 +212,16 @@
             <!-- Dialog to display the curl command -->
             <p:dialog header="Curl Command" widgetVar="curlDialog" modal="true" width="600" showEffect="fade"
                       hideEffect="fade">
-                <p:outputPanel id="curl-dialog-content">
+                <p:outputPanel id="curl-dialog-content" styleClass="dialog-scrollable-content">
                     <p>You can use the following command to test this mock endpoint:</p>
                     <div class="curl-command">
                         <h:outputText value="#{mockConfigBean.generatedCurlCommand}"/>
                     </div>
                 </p:outputPanel>
                 <f:facet name="footer">
+                    <p:commandButton value="Copy Command" icon="pi pi-copy" type="button"
+                                     onclick="copyFromHiddenInput('form:hiddenCurlCommand')"
+                                     styleClass="ui-button-info"/>
                     <p:commandButton value="Close" icon="pi pi-times" onclick="PF('curlDialog').hide()"
                                      class="ui-button-secondary"/>
                 </f:facet>
@@ -166,6 +231,8 @@
                 <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes"/>
                 <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
             </p:confirmDialog>
+
+            <h:inputHidden id="hiddenCurlCommand" value="#{mockConfigBean.curlCommandToCopy}"/>
         </h:form>
     </div>
 </h:body>

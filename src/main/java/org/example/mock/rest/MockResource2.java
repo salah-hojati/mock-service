@@ -30,7 +30,7 @@ public class MockResource2 {
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public Response handleMockPost(@PathParam("urlPattern") String urlPattern, String requestBody) {
-        // Pass the captured request body
+        // Pass the captured request body PCAS/api/fetchHeirsAndBeneficiaries
         return handleMockRequest("POST", urlPattern, requestBody);
     }
 
