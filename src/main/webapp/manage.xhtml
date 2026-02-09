@@ -34,7 +34,6 @@
             });
         }
 
-
     </script>
     <style type="text/css">
 
@@ -87,7 +86,7 @@
             </p:toolbar>
             <p:dataTable id="dt-configs" widgetVar="dtConfigs" var="config" value="#{mockConfigBean.configs}"
                          rowKey="#{config.id}" resizableColumns="true"
-                         rows="10" paginator="true" paginatorPosition="bottom">
+                         rows="10" paginator="true" paginatorPosition="bottom"  scrollable="true"  scrollHeight="600">
 
 
 
@@ -99,7 +98,7 @@
                 <p:column headerText="ID" sortBy="#{config.id}" style="width:2rem">
                     <h:outputText value="#{config.id}"/>
                 </p:column>
-                <p:column headerText="URL Pattern" sortBy="#{config.urlPattern}" style="width:10%">
+                <p:column headerText="URL Pattern" sortBy="#{config.urlPattern}" style="width:10% ">
                     <h:outputText value="#{config.urlPattern}" id="urlText"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;"/>
                     <p:tooltip for="urlText" value="#{config.urlPattern}"
                                showDelay="0" hideDelay="0"/>
@@ -116,6 +115,7 @@
                 <p:column headerText="Status" sortBy="#{config.httpStatusCode}" style="width:1rem; text-align:center;">
                     <h:outputText value="#{config.httpStatusCode}"/>
                 </p:column>
+                <p:column headerText="Description"><h:outputText value="#{config.description}"/></p:column>
                 <p:column style="width:1rem;text-align: center">
                     <p:commandButton icon="pi pi-pencil" title="Edit Rule"
                                      actionListener="#{mockConfigBean.setSelectedConfig(config)}"
@@ -186,6 +186,12 @@
                                                decimalPlaces="0"
                                                required="true"
                                                title="The HTTP status code to return (e.g., 200, 404, 500)."/>
+                            </div>
+
+                            <div class="p-field">
+                                <p:outputLabel for="description">Description</p:outputLabel>
+                                <p:inputTextarea id="description" value="#{mockConfigBean.selectedConfig.description}"
+                                                 rows="3"/>
                             </div>
                         </p:outputPanel>
                     </p:outputPanel>

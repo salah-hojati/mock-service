@@ -15,7 +15,7 @@ git stash
 # git config pull.rebase false
 
 # 4. Pull the latest changes from GitHub
-git pull origin v3
+git pull origin v4
 
 # 5. Bring your changes back from the stash
 git stash pop
@@ -25,4 +25,4 @@ git commit -m "test" -a
 
 
 # 7. Push to GitHub
-git push origin v3
+git push origin v4
