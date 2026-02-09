@@ -27,10 +27,13 @@ public class MockConfig implements Serializable {
     @Column(name = "RESPONSE_PAYLOAD", nullable = false)
     private String responsePayload;
 
+    @Column(name = "DESCRIPTION")
+    private String description;
 
     @Min(0) // Ensures the value is not negative
     @Column(name = "DELAY_MS", nullable = false)
     private Integer delayMs = 0; // Default to 0
+
 
 
     @Min(100)
@@ -81,6 +84,13 @@ public class MockConfig implements Serializable {
     public String getResponsePayload() { return responsePayload; }
     public void setResponsePayload(String responsePayload) { this.responsePayload = responsePayload; }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -99,7 +99,7 @@
 
             <p:dataTable id="dt-configs" widgetVar="dtConfigs" var="config" value="#{gatewayBean.configs}"
                          selectionMode="single" selection="#{gatewayBean.selectedConfig}" rowKey="#{config.id}"
-                         rows="10" paginator="true" paginatorPosition="bottom" resizableColumns="true">
+                         rows="10" paginator="true" paginatorPosition="bottom" resizableColumns="true"  scrollable="true"  scrollHeight="600">
 
                 <p:ajax event="rowSelect" update=":dialog-form:manage-gateway-content"
                         oncomplete="PF('manageGatewayDialog').show()"/>
