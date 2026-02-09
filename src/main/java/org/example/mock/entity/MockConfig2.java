@@ -40,8 +40,6 @@ public class MockConfig2 implements Serializable {
     @Column(name = "HTTP_METHOD", nullable = false, length = 10)
     private String httpMethod = "POST";
 
-    @Column(name = "DESCRIPTION")
-    private String description;
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -59,14 +57,6 @@ public class MockConfig2 implements Serializable {
     // ADD GETTER AND SETTER FOR THE NEW FIELD
     public String getCapturedRequestPayload() { return capturedRequestPayload; }
     public void setCapturedRequestPayload(String capturedRequestPayload) { this.capturedRequestPayload = capturedRequestPayload; }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
 
     @Override
     public boolean equals(Object o) {

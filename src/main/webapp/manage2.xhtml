@@ -86,7 +86,7 @@
             </p:toolbar>
             <p:dataTable id="dt-configs" widgetVar="dtConfigs" var="config" value="#{mockConfigBean2.configs}"
                          rowKey="#{config.id}" resizableColumns="true"
-                         rows="10" paginator="true" paginatorPosition="bottom"  scrollable="true"  scrollHeight="600">
+                         rows="10" paginator="true" paginatorPosition="bottom">
 
                 <p:ajax event="rowSelect" update=":form:dialogContentWrapper"
                         oncomplete="PF('manageConfigDialog').show()"/>
@@ -118,7 +118,6 @@
                 <p:column headerText="Status" sortBy="#{config.httpStatusCode}" style="width:1rem; text-align:center;">
                     <h:outputText value="#{config.httpStatusCode}"/>
                 </p:column>
-                <p:column headerText="Description"><h:outputText value="#{config.description}"/></p:column>
                 <p:column style="width:1rem;text-align: center">
                     <p:commandButton icon="pi pi-pencil" title="Edit Rule"
                                      actionListener="#{mockConfigBean2.setSelectedConfig(config)}"
@@ -186,11 +185,6 @@
                                 <p:inputNumber id="status" value="#{mockConfigBean2.selectedConfig.httpStatusCode}"
                                                decimalPlaces="0" required="true"
                                                title="The HTTP status code to return (e.g., 200, 404, 500)."/>
-                            </div>
-                            <div class="p-field">
-                                <p:outputLabel for="description">Description</p:outputLabel>
-                                <p:inputTextarea id="description" value="#{mockConfigBean2.selectedConfig.description}"
-                                                 rows="3"/>
                             </div>
                         </p:outputPanel>
                     </p:outputPanel>
