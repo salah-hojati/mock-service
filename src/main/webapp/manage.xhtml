@@ -104,10 +104,14 @@
                                showDelay="0" hideDelay="0"/>
                 </p:column>
                 <p:column headerText="Request Payload" style="width:40%">
-                    <p:inputTextarea readonly="true" rows="3" value="#{config.requestPayload}" style="border:none;"/>
+                    <p:inputTextarea readonly="true" rows="3" value="#{config.requestPayload}"
+                                     style="resize: none; overflow: auto; width: 600px; max-height: 120px; height: auto;"
+                    />
                 </p:column>
                 <p:column headerText="Response Payload" style="width:40%">
-                    <p:inputTextarea readonly="true" rows="3" value="#{config.responsePayload}" style="border:none;"/>
+                    <p:inputTextarea readonly="true" rows="3" value="#{config.responsePayload}"
+                                     style="resize: none; overflow: auto; width: 600px; max-height: 120px; height: auto;"
+                    />
                 </p:column>
                 <p:column headerText="Delay (ms)" sortBy="#{config.delayMs}" style="width:1rem; text-align:right;">
                     <h:outputText value="#{config.delayMs}"/>
