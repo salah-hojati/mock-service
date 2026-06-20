@@ -29,7 +29,7 @@ public class MockResource2 {
 
     @GET
     @Path("/{urlPattern:.+}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN,MediaType.APPLICATION_FORM_URLENCODED})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public Response handleMockGet(@PathParam("urlPattern") String urlPattern) {
         // Pass null for the request body
         return handleMockRequest("GET", urlPattern, null);
@@ -38,7 +38,7 @@ public class MockResource2 {
     @POST
     @Path("/{urlPattern:.+}")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN,MediaType.APPLICATION_FORM_URLENCODED})
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN,MediaType.APPLICATION_FORM_URLENCODED})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public Response handleMockPost(@PathParam("urlPattern") String urlPattern, @Context HttpHeaders headers, String requestBody) {
 
 
@@ -57,7 +57,7 @@ public class MockResource2 {
     @PUT
     @Path("/{urlPattern:.+}")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN,MediaType.APPLICATION_FORM_URLENCODED})
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN,MediaType.APPLICATION_FORM_URLENCODED})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public Response handleMockPut(@PathParam("urlPattern") String urlPattern, @Context HttpHeaders headers, String requestBody) {
         // Pass the captured request body
 
@@ -74,7 +74,7 @@ public class MockResource2 {
 
     @DELETE
     @Path("/{urlPattern:.+}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN,MediaType.APPLICATION_FORM_URLENCODED})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public Response handleMockDelete(@PathParam("urlPattern") String urlPattern) {
         // Pass null for the request body
         return handleMockRequest("DELETE", urlPattern, null);

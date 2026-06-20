@@ -28,7 +28,7 @@ public class MockResource {
 
     @GET
     @Path("/{urlPattern:.+}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN,MediaType.APPLICATION_FORM_URLENCODED})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public Response handleMockGet(@PathParam("urlPattern") String urlPattern) {
         return handleMockRequest("GET", urlPattern, null);
     }
@@ -36,7 +36,7 @@ public class MockResource {
     @POST
     @Path("/{urlPattern:.+}")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN,MediaType.APPLICATION_FORM_URLENCODED})
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN,MediaType.APPLICATION_FORM_URLENCODED})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public Response handleMockPost(@PathParam("urlPattern") String urlPattern, @Context HttpHeaders headers, String requestBody) {
 
 
@@ -58,7 +58,7 @@ public class MockResource {
     @PUT
     @Path("/{urlPattern:.+}")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN,MediaType.APPLICATION_FORM_URLENCODED})
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN,MediaType.APPLICATION_FORM_URLENCODED})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public Response handleMockPut(@PathParam("urlPattern") String urlPattern, @Context HttpHeaders headers,String requestBody) {
 
 
@@ -78,7 +78,7 @@ public class MockResource {
 
     @DELETE
     @Path("/{urlPattern:.+}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN,MediaType.APPLICATION_FORM_URLENCODED})
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public Response handleMockDelete(@PathParam("urlPattern") String urlPattern) {
         return handleMockRequest("DELETE", urlPattern, null);
     }

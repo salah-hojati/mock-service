@@ -37,6 +37,7 @@ public class GatewayResource {
 
     @GET
     @Path("/{sourceUrlPattern:.+}")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_FORM_URLENCODED})
     public Response handleGet(
             @PathParam("sourceUrlPattern") String sourceUrlPattern,
             @Context HttpHeaders headers,
@@ -47,6 +48,7 @@ public class GatewayResource {
 
     @POST
     @Path("/{sourceUrlPattern:.+}")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_FORM_URLENCODED})
     public Response handlePost(
             @PathParam("sourceUrlPattern") String sourceUrlPattern,
             @Context HttpHeaders headers,
@@ -54,35 +56,26 @@ public class GatewayResource {
             String requestBody) {
 
 
-        MediaType contentType = headers.getMediaType();
-        String processedBody = requestBody;
-
-        if (contentType != null && MediaType.APPLICATION_FORM_URLENCODED_TYPE.isCompatible(contentType)) {
-            processedBody = convertFormToJson(requestBody);
-        }
-
-        return proxyRequest("POST", sourceUrlPattern, headers, uriInfo, requestBody);
+        String processedBody = processRequestBody(headers, requestBody);
+        return proxyRequest("POST", sourceUrlPattern, headers, uriInfo, processedBody);
     }
 
     @PUT
     @Path("/{sourceUrlPattern:.+}")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_FORM_URLENCODED})
     public Response handlePut(
             @PathParam("sourceUrlPattern") String sourceUrlPattern,
             @Context HttpHeaders headers,
             @Context UriInfo uriInfo,
             String requestBody) {
 
-        MediaType contentType = headers.getMediaType();
-        String processedBody = requestBody;
-
-        if (contentType != null && MediaType.APPLICATION_FORM_URLENCODED_TYPE.isCompatible(contentType)) {
-            processedBody = convertFormToJson(requestBody);
-        }
-        return proxyRequest("PUT", sourceUrlPattern, headers, uriInfo, requestBody);
+        String processedBody = processRequestBody(headers, requestBody);
+        return proxyRequest("PUT", sourceUrlPattern, headers, uriInfo, processedBody);
     }
 
     @DELETE
     @Path("/{sourceUrlPattern:.+}")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_FORM_URLENCODED})
     public Response handleDelete(
             @PathParam("sourceUrlPattern") String sourceUrlPattern,
             @Context HttpHeaders headers,
@@ -109,6 +102,23 @@ public class GatewayResource {
             @Context HttpHeaders headers,
             @Context UriInfo uriInfo) {
         return proxyRequest("HEAD", sourceUrlPattern, headers, uriInfo, null);
+    }
+    private String processRequestBody(HttpHeaders headers, String requestBody) {
+        if (requestBody == null || requestBody.isEmpty()) {
+            return null;
+        }
+
+        MediaType contentType = headers.getMediaType();
+
+        if (contentType != null && MediaType.APPLICATION_FORM_URLENCODED_TYPE.isCompatible(contentType)) {
+            try {
+                return convertFormToJson(requestBody);
+            } catch (Exception e) {
+                return requestBody;
+            }
+        }
+
+        return requestBody;
     }
 
 
