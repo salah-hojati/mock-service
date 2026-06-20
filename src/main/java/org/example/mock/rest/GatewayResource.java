@@ -1,25 +1,25 @@
 package org.example.mock.rest;
 
+import com.google.gson.Gson;
 import org.example.mock.entity.GatewayConfig;
 import org.example.mock.entity.GatewayLog;
 import org.example.mock.service.GatewayService;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.*;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,6 +29,8 @@ public class GatewayResource {
 
     @Inject
     private GatewayService gatewayService;
+
+    private static final Gson gson = new Gson();
 
     // --- JAX-RS Resource Methods ---
     // Each HTTP verb gets its own method, which then delegates to the private proxyRequest method.
@@ -50,6 +52,15 @@ public class GatewayResource {
             @Context HttpHeaders headers,
             @Context UriInfo uriInfo,
             String requestBody) {
+
+
+        MediaType contentType = headers.getMediaType();
+        String processedBody = requestBody;
+
+        if (contentType != null && MediaType.APPLICATION_FORM_URLENCODED_TYPE.isCompatible(contentType)) {
+            processedBody = convertFormToJson(requestBody);
+        }
+
         return proxyRequest("POST", sourceUrlPattern, headers, uriInfo, requestBody);
     }
 
@@ -60,6 +71,13 @@ public class GatewayResource {
             @Context HttpHeaders headers,
             @Context UriInfo uriInfo,
             String requestBody) {
+
+        MediaType contentType = headers.getMediaType();
+        String processedBody = requestBody;
+
+        if (contentType != null && MediaType.APPLICATION_FORM_URLENCODED_TYPE.isCompatible(contentType)) {
+            processedBody = convertFormToJson(requestBody);
+        }
         return proxyRequest("PUT", sourceUrlPattern, headers, uriInfo, requestBody);
     }
 
@@ -70,6 +88,8 @@ public class GatewayResource {
             @Context HttpHeaders headers,
             @Context UriInfo uriInfo) {
         // DELETE requests typically don't have a body, but we pass null for consistency.
+
+
         return proxyRequest("DELETE", sourceUrlPattern, headers, uriInfo, null);
     }
 
@@ -236,4 +256,29 @@ public class GatewayResource {
                 .map(entry -> entry.getKey() + ": " + String.join(", ", entry.getValue()))
                 .collect(Collectors.joining("\n"));
     }
+
+    private String convertFormToJson(String formData) {
+        if (formData == null || formData.isEmpty()) {
+            return null;
+        }
+
+        Map<String, String> params = new HashMap<>();
+        String[] pairs = formData.split("&");
+
+        for (String pair : pairs) {
+            if (pair.contains("=")) {
+                String[] keyValue = pair.split("=", 2);
+                try {
+                    String key = URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8.name());
+                    String value = keyValue.length > 1 ? URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8.name()) : "";
+                    params.put(key, value);
+                } catch (Exception e) {
+                    // log error
+                }
+            }
+        }
+
+        return gson.toJson(params);
+    }
+
 }
