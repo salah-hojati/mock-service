@@ -79,12 +79,12 @@
 
             <p:toolbar>
                 <p:toolbarGroup>
-                    <p:commandButton value="New" icon="pi pi-plus" actionListener="#{mockConfigBean.openNew}"
+                    <p:commandButton value="New" icon="pi pi-plus" actionListener="#{mockConfigBeanByInput.openNew}"
                                      update=":form:dialogContentWrapper"
                                      oncomplete="PF('manageConfigDialog').show()"/>
                 </p:toolbarGroup>
             </p:toolbar>
-            <p:dataTable id="dt-configs" widgetVar="dtConfigs" var="config" value="#{mockConfigBean.configs}"
+            <p:dataTable id="dt-configs" widgetVar="dtConfigs" var="config" value="#{mockConfigBeanByInput.configs}"
                          rowKey="#{config.id}" resizableColumns="true"
                          rows="10" paginator="true" paginatorPosition="bottom"  scrollable="true"  scrollHeight="600">
 
@@ -122,7 +122,7 @@
                 <p:column headerText="Description"><h:outputText value="#{config.description}"/></p:column>
                 <p:column style="width:1rem;text-align: center">
                     <p:commandButton icon="pi pi-pencil" title="Edit Rule"
-                                     actionListener="#{mockConfigBean.setSelectedConfig(config)}"
+                                     actionListener="#{mockConfigBeanByInput.setSelectedConfig(config)}"
                                      update=":form:dialogContentWrapper"
                                      oncomplete="PF('manageConfigDialog').show()"
                                      styleClass="rounded-button ui-button-success"
@@ -130,7 +130,7 @@
                 </p:column>
                 <p:column style="width:1rem;text-align: center">
                     <p:commandButton icon="pi pi-code" title="Generate Curl Command"
-                                     actionListener="#{mockConfigBean.generateCurl(config)}"
+                                     actionListener="#{mockConfigBeanByInput.generateCurl(config)}"
                                      update=":form:curl-dialog-content :form:hiddenCurlCommand"
                                      oncomplete="PF('curlDialog').show()"
                                      styleClass="rounded-button ui-button-secondary"
@@ -147,25 +147,25 @@
                       hideEffect="fade" resizable="false">
                 <p:outputPanel id="dialogContentWrapper" styleClass="dialog-scrollable-content">
                     <p:outputPanel id="manage-config-content" class="ui-fluid">
-                        <p:outputPanel rendered="#{not empty mockConfigBean.selectedConfig}">
+                        <p:outputPanel rendered="#{not empty mockConfigBeanByInput.selectedConfig}">
                             <div class="p-field">
                                 <p:outputLabel for="httpMethod">HTTP Method</p:outputLabel>
-                                <p:selectOneMenu id="httpMethod" value="#{mockConfigBean.selectedConfig.httpMethod}"
+                                <p:selectOneMenu id="httpMethod" value="#{mockConfigBeanByInput.selectedConfig.httpMethod}"
                                                  required="true">
-                                    <f:selectItems value="#{mockConfigBean.httpMethods}"/>
+                                    <f:selectItems value="#{mockConfigBeanByInput.httpMethods}"/>
                                     <p:ajax update="requestPayloadPanel"/>
                                 </p:selectOneMenu>
                             </div>
                             <div class="p-field">
                                 <p:outputLabel for="urlPattern">URL Pattern</p:outputLabel>
-                                <p:inputText id="urlPattern" value="#{mockConfigBean.selectedConfig.urlPattern}"
+                                <p:inputText id="urlPattern" value="#{mockConfigBeanByInput.selectedConfig.urlPattern}"
                                              required="true"/>
                             </div>
                             <p:outputPanel id="requestPayloadPanel">
                                 <div class="p-field" >
                                     <p:outputLabel for="requestPayload">Request Payload (Input)</p:outputLabel>
                                     <p:inputTextarea id="requestPayload"
-                                                     value="#{mockConfigBean.selectedConfig.requestPayload}" rows="10"
+                                                     value="#{mockConfigBeanByInput.selectedConfig.requestPayload}" rows="10"
                                                      cols="80" autoResize="false"/>
                                 </div>
                             </p:outputPanel>
@@ -173,20 +173,20 @@
                             <div class="p-field">
                                 <p:outputLabel for="responsePayload">Response Payload (Output)</p:outputLabel>
                                 <p:inputTextarea id="responsePayload"
-                                                 value="#{mockConfigBean.selectedConfig.responsePayload}"
+                                                 value="#{mockConfigBeanByInput.selectedConfig.responsePayload}"
                                                  required="true" rows="10"
                                                  cols="80" autoResize="false"/>
                             </div>
                             <div class="p-field">
                                 <p:outputLabel for="delay">Delay (ms)</p:outputLabel>
-                                <p:inputNumber id="delay" value="#{mockConfigBean.selectedConfig.delayMs}" minValue="0"
+                                <p:inputNumber id="delay" value="#{mockConfigBeanByInput.selectedConfig.delayMs}" minValue="0"
                                                decimalPlaces="0"
                                                required="true"
                                                title="The time in milliseconds to wait before sending the response."/>
                             </div>
                             <div class="p-field">
                                 <p:outputLabel for="status">HTTP Status Code</p:outputLabel>
-                                <p:inputNumber id="status" value="#{mockConfigBean.selectedConfig.httpStatusCode}"
+                                <p:inputNumber id="status" value="#{mockConfigBeanByInput.selectedConfig.httpStatusCode}"
                                                decimalPlaces="0"
                                                required="true"
                                                title="The HTTP status code to return (e.g., 200, 404, 500)."/>
@@ -194,7 +194,7 @@
 
                             <div class="p-field">
                                 <p:outputLabel for="description">Description</p:outputLabel>
-                                <p:inputTextarea id="description" value="#{mockConfigBean.selectedConfig.description}"
+                                <p:inputTextarea id="description" value="#{mockConfigBeanByInput.selectedConfig.description}"
                                                  rows="3"/>
                             </div>
                         </p:outputPanel>
@@ -202,12 +202,12 @@
                 </p:outputPanel>
 
                 <f:facet name="footer">
-                    <p:commandButton value="Save" icon="pi pi-check" actionListener="#{mockConfigBean.saveConfig}"
+                    <p:commandButton value="Save" icon="pi pi-check" actionListener="#{mockConfigBeanByInput.saveConfig}"
                                      update=":form:dt-configs :form:messages"
                                      oncomplete="if (!args.validationFailed) { PF('manageConfigDialog').hide(); }"
                                      process="manage-config-content @this"/>
                     <p:commandButton value="Delete" icon="pi pi-trash" styleClass="ui-button-danger"
-                                     actionListener="#{mockConfigBean.deleteConfig}"
+                                     actionListener="#{mockConfigBeanByInput.deleteConfig}"
                                      process="@this"
 
                     >
@@ -225,7 +225,7 @@
                 <p:outputPanel id="curl-dialog-content" styleClass="dialog-scrollable-content">
                     <p>You can use the following command to test this mock endpoint:</p>
                     <div class="curl-command">
-                        <h:outputText value="#{mockConfigBean.generatedCurlCommand}"/>
+                        <h:outputText value="#{mockConfigBeanByInput.generatedCurlCommand}"/>
                     </div>
                 </p:outputPanel>
                 <f:facet name="footer">
@@ -242,7 +242,7 @@
                 <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
             </p:confirmDialog>
 
-            <h:inputHidden id="hiddenCurlCommand" value="#{mockConfigBean.curlCommandToCopy}"/>
+            <h:inputHidden id="hiddenCurlCommand" value="#{mockConfigBeanByInput.curlCommandToCopy}"/>
         </h:form>
     </div>
 </h:body>

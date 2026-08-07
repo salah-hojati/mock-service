@@ -1,7 +1,7 @@
 package org.example.mock.rest;
 
 import org.example.mock.entity.MockConfig;
-import org.example.mock.service.MockConfigService;
+import org.example.mock.service.MockConfigServiceByInput;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -13,7 +13,6 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import com.google.gson.Gson;
 
@@ -24,7 +23,7 @@ public class MockResource {
     private static final Gson gson = new Gson();
 
     @Inject
-    private MockConfigService mockConfigService;
+    private MockConfigServiceByInput mockConfigService;
 
     @GET
     @Path("/{urlPattern:.+}")

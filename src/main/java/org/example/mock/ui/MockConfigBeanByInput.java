@@ -1,7 +1,9 @@
 package org.example.mock.ui;
 
 import org.example.mock.entity.MockConfig;
-import org.example.mock.service.MockConfigService;
+import org.example.mock.service.CategoryService;
+import org.example.mock.service.MockConfigServiceByInput;
+import org.example.mock.ui2.LoginBean;
 import org.example.mock.util.JsonUtil;
 import org.primefaces.PrimeFaces;
 
@@ -21,13 +23,17 @@ import java.util.logging.Logger;
 
 @Named
 @ViewScoped
-public class MockConfigBean implements Serializable {
+public class MockConfigBeanByInput implements Serializable {
 
-    private static final Logger LOGGER = Logger.getLogger(MockConfigBean.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MockConfigBeanByInput.class.getName());
 
     @Inject
-    private MockConfigService mockConfigService;
+    private MockConfigServiceByInput mockConfigService;
 
+   @Inject
+   private LoginBean loginBean;
+    @Inject
+    private CategoryService categoryService;
     private List<MockConfig> configs= new ArrayList<>();;
     private MockConfig selectedConfig;
     private String generatedCurlCommand;
@@ -67,6 +73,7 @@ public class MockConfigBean implements Serializable {
             // Normalize JSON payloads before saving
             this.selectedConfig.setRequestPayload(JsonUtil.normalize(this.selectedConfig.getRequestPayload()));
             this.selectedConfig.setResponsePayload(JsonUtil.normalize(this.selectedConfig.getResponsePayload()));
+            this.selectedConfig.setUser(loginBean.getUser());
 
             mockConfigService.save(this.selectedConfig);
 

@@ -25,7 +25,20 @@ public class GatewayConfig implements Serializable {
 
     @Column(name = "DESCRIPTION")
     private String description;
+    // Add to GatewayConfig.java
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "USER_ID", nullable = false)
+    private AppUser user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CATEGORY_ID")
+    private Category category;
+
+    // Getters and Setters
+    public AppUser getUser() { return user; }
+    public void setUser(AppUser user) { this.user = user; }
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

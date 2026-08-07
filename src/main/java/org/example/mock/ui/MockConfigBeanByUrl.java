@@ -1,7 +1,8 @@
 package org.example.mock.ui;
 
 import org.example.mock.entity.MockConfig2;
-import org.example.mock.service.MockConfigService2;
+import org.example.mock.service.MockConfigServiceByUrl;
+import org.example.mock.ui2.LoginBean;
 import org.example.mock.util.JsonUtil;
 import org.primefaces.PrimeFaces;
 
@@ -21,20 +22,22 @@ import java.util.logging.Logger;
 
 @Named
 @ViewScoped
-public class MockConfigBean2 implements Serializable {
-    private static final Logger LOGGER = Logger.getLogger(MockConfigBean2.class.getName());
+public class MockConfigBeanByUrl implements Serializable {
+    private static final Logger LOGGER = Logger.getLogger(MockConfigBeanByUrl.class.getName());
 
     // This could be a static final constant for a minor performance gain.
     private static final List<String> HTTP_METHODS = Arrays.asList("GET", "POST", "PUT", "DELETE");
 
     @Inject
-    private MockConfigService2 mockConfigService;
+    private MockConfigServiceByUrl mockConfigService;
 
     private List<MockConfig2> configs = new ArrayList<>();
     private MockConfig2 selectedConfig;
     private String generatedCurlCommand;
     private String curlCommandToCopy;
 
+    @Inject
+    private LoginBean loginBean;
 
     @PostConstruct
     public void init() {
@@ -56,7 +59,7 @@ public class MockConfigBean2 implements Serializable {
             // Normalize JSON payloads before saving
             this.selectedConfig.setCapturedRequestPayload(JsonUtil.normalize(this.selectedConfig.getCapturedRequestPayload()));
             this.selectedConfig.setResponsePayload(JsonUtil.normalize(this.selectedConfig.getResponsePayload()));
-
+            this.selectedConfig.setUser(loginBean.getUser());
             mockConfigService.save(this.selectedConfig);
             this.configs = mockConfigService.findAll(); // Refresh list from DB
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Configuration Saved"));

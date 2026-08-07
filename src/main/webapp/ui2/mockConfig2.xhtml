@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+    <title>Mock Configs 2</title>
+    <style>
+        .ui-toolbar {
+            border: none !important;
+            background: #f8f9fa !important;
+            padding: 10px !important;
+            border-radius: 4px !important;
+        }
+        .ui-datatable {
+            margin-top: 10px;
+        }
+        .ui-dialog-content {
+            padding: 20px !important;
+        }
+        .captured-payload {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 150px;
+            overflow: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</h:head>
+<h:body>
+    <h:form id="form2" prependId="false">
+        <p:messages id="messages2" showDetail="true" closable="true" redisplay="false"
+                    autoUpdate="true" style="margin-bottom:10px;" />
+
+        <p:toolbar>
+            <p:toolbarGroup>
+                <p:commandButton value="New" action="#{mockConfigBeanByUrl.openNew()}"
+                                 icon="pi pi-plus" update="@form"
+                                 oncomplete="PF('manageMock2Dialog').show()" />
+                <p:commandButton value="Delete" action="#{mockConfigBeanByUrl.deleteConfig()}"
+                                 icon="pi pi-trash" update="@form"
+                                 disabled="#{empty mockConfigBeanByUrl.selectedConfig}" />
+            </p:toolbarGroup>
+            <p:toolbarGroup align="right">
+                <p:selectOneMenu value="#{mockConfigBeanByUrl.selectedCategoryId}"
+                                 onchange="PF('mockConfigBean2').filterByCategory()"
+                                 style="width:200px;">
+                    <f:selectItem itemLabel="All Categories" itemValue="" />
+                    <f:selectItems value="#{mockConfigBeanByUrl.categories}" var="cat"
+                                   itemLabel="#{cat.name}" itemValue="#{cat.id}" />
+                </p:selectOneMenu>
+                <p:commandButton value="Filter" action="#{mockConfigBeanByUrl.filterByCategory()}"
+                                 icon="pi pi-search" update="@form"
+                                 style="margin-left:5px;" />
+            </p:toolbarGroup>
+        </p:toolbar>
+
+        <p:dataTable id="dt-configs" var="config" value="#{mockConfigBeanByUrl.configs}"
+                     selection="#{mockConfigBeanByUrl.selectedConfig}" selectionMode="single"
+                     rowKey="#{config.id}" style="margin-top:10px;"
+                     paginator="true" rows="10"
+                     paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                     rowsPerPageTemplate="5,10,20,50">
+
+            <p:column headerText="ID" style="width:50px;">
+                <h:outputText value="#{config.id}" />
+            </p:column>
+
+            <p:column headerText="Method" style="width:80px;">
+                <!-- FIX: Changed p:label to h:outputText -->
+                <h:outputText value="#{config.httpMethod}" />
+            </p:column>
+
+            <p:column headerText="URL Pattern">
+                <h:outputText value="#{config.urlPattern}" />
+            </p:column>
+
+            <p:column headerText="Category">
+                <h:outputText value="#{mockConfigBeanByUrl.getCategoryName(config.category.id)}"
+                              rendered="#{config.category != null}" />
+                <h:outputText value="-" rendered="#{config.category == null}" />
+            </p:column>
+
+            <p:column headerText="Status" style="width:80px;">
+                <!-- FIX: Changed p:label to h:outputText -->
+                <h:outputText value="#{config.httpStatusCode}" />
+            </p:column>
+
+            <p:column headerText="Delay" style="width:80px;">
+                <h:outputText value="#{config.delayMs}ms" />
+            </p:column>
+
+            <p:column headerText="Has Captured Payload" style="width:120px;">
+                <h:outputText value="✓" style="color:green; font-weight:bold;"
+                              rendered="#{not empty config.capturedRequestPayload}" />
+                <h:outputText value="✗" style="color:gray;"
+                              rendered="#{empty config.capturedRequestPayload}" />
+            </p:column>
+
+            <p:column headerText="Actions" style="width:160px;">
+                <p:commandButton icon="pi pi-pencil" title="Edit"
+                                 action="#{mockConfigBeanByUrl.setSelectedConfig(config)}"
+                                 update="@form"
+                                 oncomplete="PF('manageMock2Dialog').show()" />
+                <p:commandButton icon="pi pi-eye" title="View Captured Payload"
+                                 action="#{mockConfigBeanByUrl.setSelectedConfig(config)}"
+                                 update="@form"
+                                 oncomplete="PF('capturedPayloadDialog').show()"
+                                 disabled="#{empty config.capturedRequestPayload}" />
+                <p:commandButton icon="pi pi-terminal" title="Generate cURL"
+                                 action="#{mockConfigBeanByUrl.generateCurl(config)}"
+                                 update="@form"
+                                 oncomplete="PF('curlDialog2').show()" />
+            </p:column>
+        </p:dataTable>
+
+        <!-- Manage Dialog -->
+        <p:dialog id="manageMock2Dialog" header="Manage Mock Configuration"
+                  widgetVar="manageMock2Dialog" modal="true"
+                  resizable="false" width="800" height="auto"
+                  closeOnEscape="true" closable="true">
+            <p:outputPanel id="manage-config-content" style="padding:5px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                    <div>
+                        <p:outputLabel for="httpMethod2" value="HTTP Method" />
+                        <p:selectOneMenu id="httpMethod2" value="#{mockConfigBeanByUrl.selectedConfig.httpMethod}"
+                                         style="width:100%;">
+                            <f:selectItems value="#{mockConfigBeanByUrl.httpMethods}" />
+                        </p:selectOneMenu>
+                    </div>
+                    <div>
+                        <p:outputLabel for="urlPattern2" value="URL Pattern" />
+                        <p:inputText id="urlPattern2" value="#{mockConfigBeanByUrl.selectedConfig.urlPattern}"
+                                     style="width:100%;" required="true" />
+                    </div>
+                </div>
+
+                <div style="margin-top:10px;">
+                    <p:outputLabel for="category2" value="Category" />
+                    <p:selectOneMenu id="category2" value="#{mockConfigBeanByUrl.selectedCategoryId}"
+                                     style="width:100%;">
+                        <f:selectItem itemLabel="No Category" itemValue="" />
+                        <f:selectItems value="#{mockConfigBeanByUrl.categories}" var="cat"
+                                       itemLabel="#{cat.name}" itemValue="#{cat.id}" />
+                    </p:selectOneMenu>
+                </div>
+
+                <div style="margin-top:10px;">
+                    <p:outputLabel for="responsePayload2" value="Response Payload (JSON)" />
+                    <p:inputTextarea id="responsePayload2" value="#{mockConfigBeanByUrl.selectedConfig.responsePayload}"
+                                     style="width:100%; height:150px;" />
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:10px;">
+                    <div>
+                        <p:outputLabel for="statusCode2" value="HTTP Status Code" />
+                        <p:inputText id="statusCode2" value="#{mockConfigBeanByUrl.selectedConfig.httpStatusCode}"
+                                     style="width:100%;" required="true" />
+                    </div>
+                    <div>
+                        <p:outputLabel for="delayMs2" value="Delay (ms)" />
+                        <p:inputText id="delayMs2" value="#{mockConfigBeanByUrl.selectedConfig.delayMs}"
+                                     style="width:100%;" />
+                    </div>
+                </div>
+
+                <div style="margin-top:10px;">
+                    <p:outputLabel for="description2" value="Description" />
+                    <p:inputTextarea id="description2" value="#{mockConfigBeanByUrl.selectedConfig.description}"
+                                     style="width:100%; height:60px;" />
+                </div>
+
+                <!-- Show captured payload in edit dialog (read-only) -->
+                <div style="margin-top:10px;" rendered="#{not empty mockConfigBeanByUrl.selectedConfig.capturedRequestPayload}">
+                    <p:outputLabel value="Captured Request Payload" />
+                    <div class="captured-payload">
+                        <h:outputText value="#{mockConfigBeanByUrl.selectedConfig.capturedRequestPayload}" />
+                    </div>
+                </div>
+
+                <p:separator style="margin:15px 0;" />
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:15px;">
+                    <p:commandButton value="Cancel" onclick="PF('manageMock2Dialog').hide()" />
+                    <p:commandButton value="Save" action="#{mockConfigBeanByUrl.saveConfig()}"
+                                     styleClass="ui-button-success"
+                                     update="@form" />
+                </div>
+            </p:outputPanel>
+        </p:dialog>
+
+        <!-- Captured Payload Dialog -->
+        <p:dialog id="capturedPayloadDialog" header="Captured Request Payload"
+                  widgetVar="capturedPayloadDialog" modal="true"
+                  resizable="false" width="700" height="auto"
+                  closeOnEscape="true" closable="true">
+            <p:outputPanel id="captured-payload-content" style="padding:5px;">
+                <div style="margin-bottom:10px;">
+                    <p:outputLabel value="URL Pattern: " />
+                    <h:outputText value="#{mockConfigBeanByUrl.selectedConfig.urlPattern}" style="font-weight:bold;" />
+                </div>
+                <div style="margin-bottom:10px;">
+                    <p:outputLabel value="HTTP Method: " />
+                    <h:outputText value="#{mockConfigBeanByUrl.selectedConfig.httpMethod}" style="font-weight:bold;" />
+                </div>
+                <p:outputLabel value="Captured Payload:" />
+                <div class="captured-payload" style="max-height:400px;">
+                    <h:outputText value="#{mockConfigBeanByUrl.selectedConfig.capturedRequestPayload}"
+                                  style="white-space:pre-wrap; word-break:break-all; font-family:monospace;" />
+                </div>
+                <div style="display:flex; justify-content:flex-end; margin-top:15px;">
+                    <p:commandButton value="Close" onclick="PF('capturedPayloadDialog').hide()" />
+                </div>
+            </p:outputPanel>
+        </p:dialog>
+
+        <!-- cURL Dialog -->
+        <p:dialog id="curlDialog2" header="cURL Command" widgetVar="curlDialog2"
+                  modal="true" resizable="false" width="700" height="auto"
+                  closeOnEscape="true" closable="true">
+            <p:outputPanel id="curl-dialog-content">
+                <p:inputTextarea id="curlCommandToCopy2" value="#{mockConfigBeanByUrl.curlCommandToCopy}"
+                                 style="width:100%; height:200px; font-family:monospace;"
+                                 readonly="true" />
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+                    <p:commandButton value="Copy to Clipboard" icon="pi pi-copy"
+                                     onclick="copyToClipboard('curlCommandToCopy2')" />
+                    <p:commandButton value="Close" onclick="PF('curlDialog2').hide()" />
+                </div>
+            </p:outputPanel>
+        </p:dialog>
+    </h:form>
+
+    <!-- JavaScript for copy to clipboard -->
+    <script type="text/javascript">
+        function copyToClipboard(elementId) {
+            var textarea = document.getElementById(elementId);
+            if (textarea) {
+                textarea.select();
+                document.execCommand('copy');
+                alert('Copied to clipboard!');
+            }
+        }
+    </script>
+</h:body>
+</html>

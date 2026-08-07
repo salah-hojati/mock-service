@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+    <title>Gateway Configs</title>
+    <style>
+        .ui-toolbar {
+            border: none !important;
+            background: #f8f9fa !important;
+            padding: 10px !important;
+            border-radius: 4px !important;
+        }
+        .ui-datatable {
+            margin-top: 10px;
+        }
+        .ui-dialog-content {
+            padding: 20px !important;
+        }
+        .log-container {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 150px;
+            overflow: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .status-enabled {
+            color: green;
+            font-weight: bold;
+        }
+        .status-disabled {
+            color: red;
+            font-weight: bold;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</h:head>
+<h:body>
+    <h:form id="form3" prependId="false">
+        <p:messages id="messages3" showDetail="true" closable="true" redisplay="false"
+                    autoUpdate="true" style="margin-bottom:10px;" />
+
+        <p:toolbar>
+            <p:toolbarGroup>
+                <p:commandButton value="New" action="#{gatewayBean.openNew()}"
+                                 icon="pi pi-plus"
+                                 update="@form"
+                                 oncomplete="PF('manageGatewayDialog').show()" />
+                <p:commandButton value="Delete" action="#{gatewayBean.deleteConfig()}"
+                                 icon="pi pi-trash" update="@form"
+                                 disabled="#{empty gatewayBean.selectedConfig}" />
+            </p:toolbarGroup>
+            <p:toolbarGroup align="right">
+                <p:selectOneMenu value="#{gatewayBean.selectedCategoryId}"
+                                 onchange="PF('gatewayBean').filterByCategory()"
+                                 style="width:200px;">
+                    <f:selectItem itemLabel="All Categories" itemValue="" />
+                    <f:selectItems value="#{gatewayBean.categories}" var="cat"
+                                   itemLabel="#{cat.name}" itemValue="#{cat.id}" />
+                </p:selectOneMenu>
+                <p:commandButton value="Filter" action="#{gatewayBean.filterByCategory()}"
+                                 icon="pi pi-search"
+                                 update="@form"
+                                 style="margin-left:5px;" />
+            </p:toolbarGroup>
+        </p:toolbar>
+
+        <p:dataTable id="dt-configs" var="config" value="#{gatewayBean.configs}"
+                     selection="#{gatewayBean.selectedConfig}" selectionMode="single"
+                     rowKey="#{config.id}" style="margin-top:10px;"
+                     paginator="true" rows="10"
+                     paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                     rowsPerPageTemplate="5,10,20,50">
+
+            <p:column headerText="ID" style="width:50px;">
+                <h:outputText value="#{config.id}" />
+            </p:column>
+
+            <p:column headerText="Source Pattern" style="min-width:150px;">
+                <h:outputText value="#{config.sourceUrlPattern}" />
+            </p:column>
+
+            <p:column headerText="Target URL" style="min-width:200px;">
+                <h:outputText value="#{config.targetBaseUrl}" />
+            </p:column>
+
+            <p:column headerText="Category" style="width:120px;">
+                <h:outputText value="#{gatewayBean.getCategoryName(config.category.id)}"
+                              rendered="#{config.category != null}" />
+                <h:outputText value="-" rendered="#{config.category == null}" />
+            </p:column>
+
+            <p:column headerText="Status" style="width:80px;">
+                <span class="badge badge-success" rendered="#{config.enabled}">Enabled</span>
+                <span class="badge badge-danger" rendered="#{not config.enabled}">Disabled</span>
+            </p:column>
+
+            <p:column headerText="Logs" style="width:60px; text-align:center;">
+                <p:commandButton icon="pi pi-history" title="View Logs"
+                                 action="#{gatewayBean.viewLogs(config)}"
+                                 update="@form"
+                                 oncomplete="PF('logDialog').show()"
+                                 styleClass="ui-button-info" />
+            </p:column>
+
+            <p:column headerText="Actions" style="width:160px;">
+                <p:commandButton icon="pi pi-pencil" title="Edit"
+                                 action="#{gatewayBean.setSelectedConfig(config)}"
+                                 update="@form"
+                                 oncomplete="PF('manageGatewayDialog').show()" />
+                <p:commandButton icon="pi pi-terminal" title="Generate cURL"
+                                 action="#{gatewayBean.generateCurl(config)}"
+                                 update="@form"
+                                 oncomplete="PF('curlDialog3').show()" />
+            </p:column>
+        </p:dataTable>
+
+        <!-- Manage Gateway Dialog -->
+        <p:dialog id="manageGatewayDialog" header="Manage Gateway Configuration"
+                  widgetVar="manageGatewayDialog" modal="true"
+                  resizable="false" width="600" height="auto"
+                  closeOnEscape="true" closable="true">
+            <p:outputPanel id="manage-gateway-content" style="padding:5px;">
+                <div style="margin-bottom:10px;">
+                    <p:outputLabel for="sourcePattern" value="Source URL Pattern *" />
+                    <p:inputText id="sourcePattern" value="#{gatewayBean.selectedConfig.sourceUrlPattern}"
+                                 style="width:100%;" required="true"
+                                 placeholder="e.g., api/users" />
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <p:outputLabel for="targetUrl" value="Target Base URL *" />
+                    <p:inputText id="targetUrl" value="#{gatewayBean.selectedConfig.targetBaseUrl}"
+                                 style="width:100%;" required="true"
+                                 placeholder="e.g., https://api.example.com" />
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <p:outputLabel for="category3" value="Category" />
+                    <p:selectOneMenu id="category3" value="#{gatewayBean.selectedCategoryId}"
+                                     style="width:100%;">
+                        <f:selectItem itemLabel="No Category" itemValue="" />
+                        <f:selectItems value="#{gatewayBean.categories}" var="cat"
+                                       itemLabel="#{cat.name}" itemValue="#{cat.id}" />
+                    </p:selectOneMenu>
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <p:outputLabel for="enabled" value="Enabled" />
+                    <p:selectBooleanCheckbox id="enabled" value="#{gatewayBean.selectedConfig.enabled}" />
+                </div>
+
+                <div style="margin-bottom:10px;">
+                    <p:outputLabel for="description3" value="Description" />
+                    <p:inputTextarea id="description3" value="#{gatewayBean.selectedConfig.description}"
+                                     style="width:100%; height:60px;"
+                                     placeholder="Optional description for this gateway rule" />
+                </div>
+
+                <p:separator style="margin:15px 0;" />
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:15px;">
+                    <p:commandButton value="Cancel" onclick="PF('manageGatewayDialog').hide()" />
+                    <p:commandButton value="Save" action="#{gatewayBean.saveConfig()}"
+                                     styleClass="ui-button-success"
+                                     update="@form" />
+                </div>
+            </p:outputPanel>
+        </p:dialog>
+
+        <!-- Log Dialog -->
+        <p:dialog id="logDialog" header="Gateway Logs" widgetVar="logDialog"
+                  modal="true" resizable="false" width="950" height="550"
+                  closeOnEscape="true" closable="true">
+            <p:outputPanel id="log-dialog-content" style="padding:5px;">
+                <div style="margin-bottom:10px;">
+                    <p:outputLabel value="Gateway: " />
+                    <h:outputText value="#{gatewayBean.selectedConfig.sourceUrlPattern}"
+                                  style="font-weight:bold;" />
+                    <span style="margin-left:15px;">
+                        <p:outputLabel value="Target: " />
+                        <h:outputText value="#{gatewayBean.selectedConfig.targetBaseUrl}" />
+                    </span>
+                </div>
+
+                <p:dataTable var="log" value="#{gatewayBean.selectedConfigLogs}"
+                             paginator="true" rows="10"
+                             style="width:100%;"
+                             paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             rowsPerPageTemplate="5,10,20,50">
+
+                    <p:column headerText="Date" style="width:150px;">
+                        <h:outputText value="#{log.timestamp}">
+                            <f:convertDateTime type="both" dateStyle="medium" timeStyle="medium" />
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column headerText="Method" style="width:80px;">
+                        <h:outputText value="#{log.requestMethod}" />
+                    </p:column>
+
+                    <p:column headerText="Status" style="width:80px;">
+                        <h:outputText value="#{log.responseStatusCode}"
+                                      style="color:#{log.responseStatusCode >= 400 ? 'red' : 'green'}; font-weight:bold;" />
+                    </p:column>
+
+                    <p:column headerText="URL" style="min-width:200px;">
+                        <h:outputText value="#{log.requestUrl}" />
+                    </p:column>
+
+                    <p:column headerText="Duration" style="width:80px;">
+                        <h:outputText value="#{log.durationMs}ms" />
+                    </p:column>
+
+                    <p:column headerText="Actions" style="width:60px;">
+                        <p:commandButton icon="pi pi-eye" title="View Details"
+                                         action="#{gatewayBean.viewLogDetails(log)}"
+                                         update="@form"
+                                         oncomplete="PF('logDetailDialog').show()"
+                                         styleClass="ui-button-info" />
+                    </p:column>
+                </p:dataTable>
+
+                <p:separator style="margin:15px 0;" />
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+                    <p:commandButton value="Clear All Logs" action="#{gatewayBean.clearLogs()}"
+                                     styleClass="ui-button-danger"
+                                     update="@form"
+                                     onclick="return confirm('Are you sure you want to clear all logs for this gateway?')" />
+                    <p:commandButton value="Close" onclick="PF('logDialog').hide()" />
+                </div>
+            </p:outputPanel>
+        </p:dialog>
+
+        <!-- Log Detail Dialog -->
+        <p:dialog id="logDetailDialog" header="Log Details" widgetVar="logDetailDialog"
+                  modal="true" resizable="false" width="850" height="550"
+                  closeOnEscape="true" closable="true">
+            <p:outputPanel id="log-detail-content" style="padding:5px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                    <div>
+                        <p:outputLabel value="Date: " />
+                        <h:outputText value="#{gatewayBean.detailedLog.timestamp}">
+                            <f:convertDateTime type="both" dateStyle="medium" timeStyle="medium" />
+                        </h:outputText>
+                    </div>
+                    <div>
+                        <p:outputLabel value="Method: " />
+                        <h:outputText value="#{gatewayBean.detailedLog.requestMethod}" />
+                    </div>
+                    <div>
+                        <p:outputLabel value="Status Code: " />
+                        <h:outputText value="#{gatewayBean.detailedLog.responseStatusCode}"
+                                      style="color:#{gatewayBean.detailedLog.responseStatusCode >= 400 ? 'red' : 'green'}; font-weight:bold;" />
+                    </div>
+                    <div>
+                        <p:outputLabel value="Duration: " />
+                        <h:outputText value="#{gatewayBean.detailedLog.durationMs}ms" />
+                    </div>
+                    <div style="grid-column:1/3;">
+                        <p:outputLabel value="URL: " />
+                        <h:outputText value="#{gatewayBean.detailedLog.requestUrl}" style="word-break:break-all;" />
+                    </div>
+                </div>
+
+                <p:accordionPanel>
+                    <p:tab title="Request Body">
+                        <div class="log-container" style="max-height:200px;">
+                            <h:outputText value="#{gatewayBean.detailedLog.requestBody}"
+                                          rendered="#{not empty gatewayBean.detailedLog.requestBody}" />
+                            <h:outputText value="[Empty]" rendered="#{empty gatewayBean.detailedLog.requestBody}"
+                                          style="color:#999; font-style:italic;" />
+                        </div>
+                    </p:tab>
+
+                    <p:tab title="Response Body">
+                        <div class="log-container" style="max-height:200px;">
+                            <h:outputText value="#{gatewayBean.detailedLog.responseBody}"
+                                          rendered="#{not empty gatewayBean.detailedLog.responseBody}" />
+                            <h:outputText value="[Empty]" rendered="#{empty gatewayBean.detailedLog.responseBody}"
+                                          style="color:#999; font-style:italic;" />
+                        </div>
+                    </p:tab>
+
+                    <p:tab title="Request Headers">
+                        <div class="log-container" style="max-height:200px;">
+                            <h:outputText value="#{gatewayBean.detailedLog.requestHeaders}"
+                                          rendered="#{not empty gatewayBean.detailedLog.requestHeaders}" />
+                            <h:outputText value="[Empty]" rendered="#{empty gatewayBean.detailedLog.requestHeaders}"
+                                          style="color:#999; font-style:italic;" />
+                        </div>
+                    </p:tab>
+
+                    <p:tab title="Response Headers">
+                        <div class="log-container" style="max-height:200px;">
+                            <h:outputText value="#{gatewayBean.detailedLog.responseHeaders}"
+                                          rendered="#{not empty gatewayBean.detailedLog.responseHeaders}" />
+                            <h:outputText value="[Empty]" rendered="#{empty gatewayBean.detailedLog.responseHeaders}"
+                                          style="color:#999; font-style:italic;" />
+                        </div>
+                    </p:tab>
+                </p:accordionPanel>
+
+                <p:separator style="margin:15px 0;" />
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+                    <p:commandButton value="Close" onclick="PF('logDetailDialog').hide()" />
+                </div>
+            </p:outputPanel>
+        </p:dialog>
+
+        <!-- cURL Dialog -->
+        <p:dialog id="curlDialog3" header="cURL Command Examples" widgetVar="curlDialog3"
+                  modal="true" resizable="false" width="750" height="auto"
+                  closeOnEscape="true" closable="true">
+            <p:outputPanel id="curl-dialog-content" style="padding:5px;">
+                <p:outputLabel value="Gateway URL: " />
+                <h:outputText value="#{gatewayBean.selectedConfig.sourceUrlPattern}" style="font-weight:bold;" />
+                <br/><br/>
+
+                <p:accordionPanel>
+                    <p:tab title="GET Request">
+                        <p:inputTextarea id="curlCommandToCopy3" value="#{gatewayBean.generatedCurlCommand}"
+                                         style="width:100%; height:120px; font-family:monospace; font-size:12px;"
+                                         readonly="true" />
+                    </p:tab>
+                    <p:tab title="POST Request">
+                        <p:inputTextarea id="curlPostCommand"
+                                         value="#{gatewayBean.generatedCurlPostCommand}"
+                                         style="width:100%; height:150px; font-family:monospace; font-size:12px;"
+                                         readonly="true" />
+                    </p:tab>
+                </p:accordionPanel>
+
+                <p:separator style="margin:15px 0;" />
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+                    <p:commandButton value="Copy GET" icon="pi pi-copy"
+                                     onclick="copyToClipboard('curlCommandToCopy3')" />
+                    <p:commandButton value="Copy POST" icon="pi pi-copy"
+                                     onclick="copyToClipboard('curlPostCommand')" />
+                    <p:commandButton value="Close" onclick="PF('curlDialog3').hide()" />
+                </div>
+            </p:outputPanel>
+        </p:dialog>
+    </h:form>
+
+    <!-- JavaScript for copy to clipboard -->
+    <script type="text/javascript">
+        function copyToClipboard(elementId) {
+            var textarea = document.getElementById(elementId);
+            if (textarea) {
+                textarea.select();
+                document.execCommand('copy');
+                alert('Copied to clipboard!');
+            }
+        }
+    </script>
+</h:body>
+</html>

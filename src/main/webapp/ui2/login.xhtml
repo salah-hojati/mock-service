@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+    <title>Login - Mock Service</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .login-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .login-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .login-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        .login-footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+        .login-button {
+            width: 100%;
+            background: #667eea;
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .login-button:hover {
+            background: #5a6fd6;
+        }
+        .input-field {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        .input-field:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .label-text {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+        .ui-messages-info {
+            background: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+        .ui-messages-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+    </style>
+</h:head>
+<h:body>
+    <div class="login-container">
+        <div class="login-title">Mock Service</div>
+        <div class="login-subtitle">Sign in to your account</div>
+
+        <h:form id="loginForm">
+            <p:messages id="messages" showDetail="true" showSummary="false"
+                        closable="true" redisplay="false"
+                        style="margin-bottom:15px;" />
+
+            <label class="label-text" for="username">Username</label>
+            <p:inputText id="username" value="#{loginBean.username}"
+                         placeholder="Enter your username" required="true"
+                         styleClass="input-field" />
+
+            <label class="label-text" for="password">Password</label>
+            <p:password id="password" value="#{loginBean.password}"
+                        placeholder="Enter your password" required="true"
+                        styleClass="input-field" />
+
+            <p:commandButton value="Sign In" action="#{loginBean.login()}"
+                             styleClass="login-button"
+                             update="@form" />
+
+            <div class="login-footer">
+                Don't have an account? <h:link outcome="register" value="Register here" />
+            </div>
+        </h:form>
+    </div>
+</h:body>
+</html>

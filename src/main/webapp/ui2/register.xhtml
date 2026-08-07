@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+    <title>Register - Mock Service</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .register-container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .register-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .register-subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .register-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        .register-footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .register-footer a:hover {
+            text-decoration: underline;
+        }
+        .register-button {
+            width: 100%;
+            background: #764ba2;
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .register-button:hover {
+            background: #663d8a;
+        }
+        .input-field {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        .input-field:focus {
+            border-color: #764ba2;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+        }
+        .label-text {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+    </style>
+</h:head>
+<h:body>
+    <div class="register-container">
+        <div class="register-title">Create Account</div>
+        <div class="register-subtitle">Register for Mock Service</div>
+
+        <h:form id="registerForm">
+            <p:messages id="messages" showDetail="true" showSummary="false"
+                        closable="true" redisplay="false"
+                        style="margin-bottom:15px;" />
+
+            <label class="label-text" for="fullName">Full Name</label>
+            <p:inputText id="fullName" value="#{registerBean.fullName}"
+                         placeholder="Enter your full name"
+                         styleClass="input-field" />
+
+            <label class="label-text" for="email">Email</label>
+            <p:inputText id="email" value="#{registerBean.email}"
+                         placeholder="Enter your email"
+                         styleClass="input-field" />
+
+            <label class="label-text" for="username">Username</label>
+            <p:inputText id="username" value="#{registerBean.username}"
+                         placeholder="Choose a username" required="true"
+                         styleClass="input-field" />
+
+            <label class="label-text" for="password">Password</label>
+            <p:password id="password" value="#{registerBean.password}"
+                        placeholder="Choose a password" required="true"
+                        styleClass="input-field" />
+
+            <p:commandButton value="Register" action="#{registerBean.register()}"
+                             styleClass="register-button"
+                             update="@form" />
+
+            <div class="register-footer">
+                Already have an account? <h:link outcome="login" value="Sign in here" />
+            </div>
+        </h:form>
+    </div>
+</h:body>
+</html>

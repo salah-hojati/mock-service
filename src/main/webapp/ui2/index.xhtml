@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+    <title>Mock Service Manager</title>
+    <style>
+        .app-container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #2c3e50;
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+        .logout-btn {
+            background: #e74c3c !important;
+            border: none !important;
+            padding: 5px 15px !important;
+            border-radius: 4px !important;
+        }
+        .tab-content {
+            padding: 20px 0;
+        }
+    </style>
+</h:head>
+<h:body>
+    <h:form id="indexForm">
+        <div class="app-container">
+            <!-- Header -->
+            <div class="header-bar">
+                <div class="header-title">🚀 Mock Service Manager</div>
+                <div class="header-user">
+                    <span class="user-badge">👤 #{loginBean.username}</span>
+                    <p:commandButton value="Logout" action="#{loginBean.logout()}"
+                                     styleClass="logout-btn" />
+                </div>
+            </div>
+
+            <!-- Tab Container -->
+            <div class="tab-container">
+                <p:tabView id="mainTabView" style="border:none;"
+                           dynamic="true" cache="true">
+                    <!-- Add more tabs as needed -->
+                    <p:tab title="Mock Configs">
+                        <div class="tab-content">
+                            <ui:include src="/ui2/mockConfig.xhtml" />
+                        </div>
+                    </p:tab>
+
+                    <p:tab title="Categories">
+                        <div class="tab-content">
+                            <ui:include src="/ui2/categories.xhtml" />
+                        </div>
+                    </p:tab>
+
+
+
+<!--                    <p:tab title="Gateway Configs">-->
+<!--                        <div class="tab-content">-->
+<!--                            <ui:include src="/ui2/gateway-configs.xhtml" />-->
+<!--                        </div>-->
+<!--                    </p:tab>-->
+
+                </p:tabView>
+            </div>
+        </div>
+    </h:form>
+</h:body>
+</html>

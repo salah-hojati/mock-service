@@ -1,6 +1,5 @@
 package org.example.mock.service;
 
-import org.example.mock.entity.MockConfig;
 import org.example.mock.entity.MockConfig2;
 
 import javax.ejb.Stateless;
@@ -13,9 +12,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
-public class MockConfigService2 {
+public class MockConfigServiceByUrl {
 
-    private static final Logger LOGGER = Logger.getLogger(MockConfigService2.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MockConfigServiceByUrl.class.getName());
 
     @PersistenceContext(unitName = "mock-pu")
     private EntityManager em;

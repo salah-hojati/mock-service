@@ -45,6 +45,17 @@ public class MockConfig implements Serializable {
     @Column(name = "HTTP_METHOD", nullable = false, length = 10)
     private String httpMethod = "POST"; // Default to POST
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "USER_ID", nullable = false)
+    private AppUser user;
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CATEGORY_ID")
+    private Category category;
+
+
+
     // ... existing getters and setters ...
 
     // Add getter and setter for the new httpMethod field
@@ -83,10 +94,17 @@ public class MockConfig implements Serializable {
     public void setRequestPayload(String requestPayload) { this.requestPayload = requestPayload; }
     public String getResponsePayload() { return responsePayload; }
     public void setResponsePayload(String responsePayload) { this.responsePayload = responsePayload; }
-
     public String getDescription() {
         return description;
     }
+
+    // Getters and Setters
+    public AppUser getUser() { return user; }
+    public void setUser(AppUser user) { this.user = user; }
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
+
+
 
     public void setDescription(String description) {
         this.description = description;
