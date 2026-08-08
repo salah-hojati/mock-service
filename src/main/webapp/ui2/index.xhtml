@@ -64,13 +64,19 @@
                 <p:tabView id="mainTabView" style="border:none;"
                            dynamic="true" cache="true">
                     <!-- Add more tabs as needed -->
-                    <p:tab title="Mock Configs">
+
+                    <p:tab title="شبیه سازی بر اساس url">
+                        <div class="tab-content">
+                            <ui:include src="/ui2/mockConfig2.xhtml" />
+                        </div>
+                    </p:tab>
+                    <p:tab title="شبیه سازی بر اساس ورودی">
                         <div class="tab-content">
                             <ui:include src="/ui2/mockConfig.xhtml" />
                         </div>
                     </p:tab>
 
-                    <p:tab title="Categories">
+                    <p:tab title="دسته بندی ها">
                         <div class="tab-content">
                             <ui:include src="/ui2/categories.xhtml" />
                         </div>

@@ -68,7 +68,8 @@ public class MockConfig2 implements Serializable {
     public void setDelayMs(Integer delayMs) { this.delayMs = delayMs; }
     public Integer getHttpStatusCode() { return httpStatusCode; }
     public void setHttpStatusCode(Integer httpStatusCode) { this.httpStatusCode = httpStatusCode; }
-    public String getHttpMethod() { return httpMethod; }
+    public String getHttpMethod() {
+        return httpMethod; }
     public void setHttpMethod(String httpMethod) { this.httpMethod = httpMethod; }
 
     // ADD GETTER AND SETTER FOR THE NEW FIELD

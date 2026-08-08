@@ -2,6 +2,7 @@ package org.example.mock.ui2;
 
 import org.example.mock.entity.Category;
 import org.example.mock.entity.MockConfig;
+import org.example.mock.entity.MockConfig2;
 import org.example.mock.service.CategoryService;
 
 import org.example.mock.service.MockConfigServiceByInputNew;
@@ -79,6 +80,10 @@ public class MockConfigBeanByInputNew implements Serializable {
             } else {
                 configs = mockConfigService.findAll();
             }
+            if(selectedConfig == null) {
+                selectedConfig = new MockConfig();
+                sampleConfig(selectedConfig);
+            }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Failed to load mock configurations", e);
             configs = new ArrayList<>();
@@ -132,16 +137,22 @@ public class MockConfigBeanByInputNew implements Serializable {
         System.out.println("MockConfig selected and prepared for edit: " + mockConfig.getId());
     }
     public void openNew() {
-        this.selectedConfig = new MockConfig();
-        this.selectedConfig.setHttpMethod("POST");
-        this.selectedConfig.setHttpStatusCode(200);
-        this.selectedConfig.setDelayMs(0);
+        sampleConfig(this.selectedConfig);
         this.selectedCategoryId = null;
        // this.selectedConfigId = null;
         PrimeFaces.current().resetInputs("manage-config-content");
     }
 
+    private void sampleConfig(MockConfig selectedConfig) {
+        selectedConfig = new MockConfig();
+        selectedConfig.setHttpMethod("POST");
+        selectedConfig.setHttpStatusCode(200);
+        selectedConfig.setDelayMs(0);
+    }
+
     public boolean isRequestBodyApplicable() {
+
+
         if (selectedConfig == null || selectedConfig.getHttpMethod() == null) {
             return false;
         }
@@ -295,10 +306,7 @@ public class MockConfigBeanByInputNew implements Serializable {
 
     public MockConfig getSelectedConfig() {
         if (selectedConfig == null) {
-            selectedConfig = new MockConfig();
-            selectedConfig.setHttpMethod("POST");
-            selectedConfig.setHttpStatusCode(200);
-            selectedConfig.setDelayMs(0);
+            sampleConfig(selectedConfig);
         }
         return selectedConfig;
     }

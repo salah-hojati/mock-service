@@ -142,44 +142,6 @@
                              </div>
                          </p:column>
 
-            <!--            <p:column headerText="Actions" style="width:120px;">-->
-<!--                <p:commandButton icon="pi pi-pencil" title="Edit"-->
-<!--                                 action="#{mockConfigBeanByInputNew.setSelectedConfig(config)}"-->
-<!--                                 update="@form"-->
-<!--                                 oncomplete="PF('manageConfigDialog').show()" />-->
-<!--                <p:commandButton icon="pi pi-terminal" title="Generate cURL"-->
-<!--                                 action="#{mockConfigBeanByInputNew.generateCurl(config)}"-->
-<!--                                 update=":@form"-->
-<!--                                 oncomplete="PF('curlDialog').show()" />-->
-<!--            </p:column>-->
-
-<!--            <p:column headerText="Actions" style="width:120px; text-align:center;">-->
-<!--                <div class="action-buttons">-->
-<!--                    &lt;!&ndash; Clock button - visible when NO row is selected OR this row is NOT selected &ndash;&gt;-->
-<!--                   <p:commandButton icon="pi pi-check" title="Select"-->
-<!--                                      action="#{categoryBean.selectCategory(cat)}"-->
-<!--                                     update="@form"-->
-<!--                                     ajax="false"-->
-<!--                                     rendered="#{categoryBean.selectedCategory == null or categoryBean.selectedCategory.id != cat.id}" />-->
-
-<!--                    &lt;!&ndash; Edit button - visible only when THIS row is selected &ndash;&gt;-->
-<!--                    <p:commandButton icon="pi pi-pencil" title="Edit"-->
-<!--                                     action="#{categoryBean.selectAndEdit(cat)}"-->
-<!--                                     update="@form"-->
-<!--                                     ajax="true"-->
-<!--                                     oncomplete="PF('categoryDialog').show()"-->
-<!--                                     rendered="#{categoryBean.selectedCategory != null and categoryBean.selectedCategory.id == cat.id}" />-->
-
-<!--                    &lt;!&ndash; Delete button - visible only when THIS row is selected &ndash;&gt;-->
-<!--                    <p:commandButton icon="pi pi-trash" title="Delete"-->
-<!--                                     action="#{categoryBean.deleteCategory(cat)}"-->
-<!--                                     update="@form"-->
-<!--                                     ajax="false"-->
-<!--                                     onclick="return confirm('Are you sure you want to delete this category?')"-->
-<!--                                     disabled="#{cat.mockConfigs.size() > 0 or cat.mockConfigs2.size() > 0 or cat.gatewayConfigs.size() > 0}"-->
-<!--                                     rendered="#{categoryBean.selectedCategory != null and categoryBean.selectedCategory.id == cat.id}" />-->
-<!--                </div>-->
-<!--            </p:column>-->
         </p:dataTable>
 
         <!-- Manage Dialog -->
