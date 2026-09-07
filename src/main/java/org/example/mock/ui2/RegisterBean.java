@@ -37,7 +37,7 @@ public class RegisterBean implements Serializable {
                                 "Your account has been created. Please log in."));
                 
                 // Redirect to login page
-                context.getExternalContext().redirect(request.getContextPath() + "/login.xhtml");
+                context.getExternalContext().redirect(request.getContextPath() + "/ui2/login.xhtml");
             } else {
                 FacesContext.getCurrentInstance().addMessage(null,
                         new FacesMessage(FacesMessage.SEVERITY_ERROR, "Registration Failed", 

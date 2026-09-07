@@ -48,7 +48,23 @@ public class GatewayResource {
 
     @POST
     @Path("/{sourceUrlPattern:.+}")
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN, MediaType.APPLICATION_FORM_URLENCODED})
+    @Consumes({
+            MediaType.APPLICATION_JSON,
+            MediaType.APPLICATION_XML,
+            MediaType.TEXT_PLAIN,
+            MediaType.APPLICATION_FORM_URLENCODED,
+            MediaType.TEXT_XML,           // Add this
+            "application/soap+xml",       // Add this
+            "application/xml"             // This is already covered but explicit is better
+    })
+    @Produces({
+            MediaType.APPLICATION_JSON,
+            MediaType.APPLICATION_XML,
+            MediaType.TEXT_PLAIN,
+            MediaType.APPLICATION_FORM_URLENCODED,
+            MediaType.TEXT_XML,           // Add this
+            "application/soap+xml"        // Add this
+    })
     public Response handlePost(
             @PathParam("sourceUrlPattern") String sourceUrlPattern,
             @Context HttpHeaders headers,
