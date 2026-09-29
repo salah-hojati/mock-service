@@ -31,6 +31,26 @@
             -->
            <property name="javax.persistence.schema-generation.database.action" value="none"/>
 
+            <!-- ========================================================== -->
+            <!-- == DISABLE CACHING IN ECLIPSELINK                        == -->
+            <!-- ========================================================== -->
+
+            <!-- Disable the shared (second-level) cache entirely -->
+            <property name="eclipselink.cache.shared.default" value="false"/>
+
+            <!-- Disable the first-level cache (persistence context) - this forces
+                 queries to always hit the database, but use with caution as it
+                 can impact performance -->
+            <property name="eclipselink.persistence-context.flush-mode" value="commit"/>
+
+            <!-- Force queries to bypass the cache and hit the database directly -->
+            <property name="eclipselink.query-results-cache" value="false"/>
+
+            <!-- Disable prepared statement caching (optional, but ensures fresh queries) -->
+            <property name="eclipselink.jdbc.cache-statements" value="false"/>
+
+            <!-- Disable descriptor-level caching -->
+            <property name="eclipselink.cache.type.default" value="NONE"/>
         </properties>
     </persistence-unit>
 </persistence>

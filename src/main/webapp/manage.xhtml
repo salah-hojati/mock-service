@@ -103,6 +103,12 @@
                     <p:tooltip for="urlText" value="#{config.urlPattern}"
                                showDelay="0" hideDelay="0"/>
                 </p:column>
+                <p:column headerText="Req. Headers" style="width:12%">
+                    <h:outputText value="#{config.requestHeaders}" id="hdrText"
+                                  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;"/>
+                    <p:tooltip for="hdrText" value="#{config.requestHeaders}"
+                               showDelay="0" hideDelay="0"/>
+                </p:column>
                 <p:column headerText="Request Payload" style="width:40%">
                     <p:inputTextarea readonly="true" rows="3" value="#{config.requestPayload}"
                                      style="resize: none; overflow: auto; width: 600px; max-height: 120px; height: auto;"
@@ -160,6 +166,14 @@
                                 <p:outputLabel for="urlPattern">URL Pattern</p:outputLabel>
                                 <p:inputText id="urlPattern" value="#{mockConfigBeanByInput.selectedConfig.urlPattern}"
                                              required="true"/>
+                            </div>
+                            <div class="p-field">
+                                <p:outputLabel for="requestHeaders">Request Headers</p:outputLabel>
+                                <p:inputTextarea id="requestHeaders"
+                                                 value="#{mockConfigBeanByInput.selectedConfig.requestHeaders}"
+                                                 rows="4" cols="80" autoResize="false"
+                                                 placeholder="One header per line, e.g.&#10;Authorization: Bearer abc123&#10;X-Tenant: acme"/>
+                                <small class="ui-muted">Format: <code>Name: value</code> — one per line. Lines starting with # are ignored.</small>
                             </div>
                             <p:outputPanel id="requestPayloadPanel">
                                 <div class="p-field" >

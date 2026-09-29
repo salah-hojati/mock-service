@@ -34,7 +34,8 @@ public class MockConfig implements Serializable {
     @Column(name = "DELAY_MS", nullable = false)
     private Integer delayMs = 0; // Default to 0
 
-
+    @Column(name = "REQUEST_HEADERS", length = 4000)
+    private String requestHeaders;
 
     @Min(100)
     @Max(599)
@@ -96,6 +97,14 @@ public class MockConfig implements Serializable {
     public void setResponsePayload(String responsePayload) { this.responsePayload = responsePayload; }
     public String getDescription() {
         return description;
+    }
+
+    public String getRequestHeaders() {
+        return requestHeaders;
+    }
+
+    public void setRequestHeaders(String requestHeaders) {
+        this.requestHeaders = requestHeaders;
     }
 
     // Getters and Setters

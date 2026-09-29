@@ -29,15 +29,31 @@ public class MockResource2 {
     @GET
     @Path("/{urlPattern:.+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-    public Response handleMockGet(@PathParam("urlPattern") String urlPattern) {
+    public Response handleMockGet(@PathParam("urlPattern") String urlPattern,@Context HttpHeaders headers) {
         // Pass null for the request body
-        return handleMockRequest("GET", urlPattern, null);
+        MediaType contentType = headers.getMediaType();
+        return handleMockRequest("GET", urlPattern, null, contentType);
     }
 
     @POST
     @Path("/{urlPattern:.+}")
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN,MediaType.APPLICATION_FORM_URLENCODED})
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+    @Consumes({
+            MediaType.APPLICATION_JSON,
+            MediaType.APPLICATION_XML,
+            MediaType.TEXT_PLAIN,
+            MediaType.APPLICATION_FORM_URLENCODED,
+            MediaType.TEXT_XML,           // Add this
+            "application/soap+xml",       // Add this
+            "application/xml"             // This is already covered but explicit is better
+    })
+    @Produces({
+            MediaType.APPLICATION_JSON,
+            MediaType.APPLICATION_XML,
+            MediaType.TEXT_PLAIN,
+            MediaType.APPLICATION_FORM_URLENCODED,
+            MediaType.TEXT_XML,           // Add this
+            "application/soap+xml"        // Add this
+    })
     public Response handleMockPost(@PathParam("urlPattern") String urlPattern, @Context HttpHeaders headers, String requestBody) {
 
 
@@ -49,8 +65,9 @@ public class MockResource2 {
             LOGGER.info("Converted form-urlencoded to JSON: " + processedBody);
         }
 
+
         // Pass the captured request body PCAS/api/fetchHeirsAndBeneficiaries
-        return handleMockRequest("POST", urlPattern, requestBody);
+        return handleMockRequest("POST", urlPattern, requestBody,contentType);
     }
 
     @PUT
@@ -68,15 +85,15 @@ public class MockResource2 {
             LOGGER.info("Converted form-urlencoded to JSON: " + processedBody);
         }
 
-        return handleMockRequest("PUT", urlPattern, requestBody);
+        return handleMockRequest("PUT", urlPattern, requestBody, contentType);
     }
 
     @DELETE
     @Path("/{urlPattern:.+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-    public Response handleMockDelete(@PathParam("urlPattern") String urlPattern) {
-        // Pass null for the request body
-        return handleMockRequest("DELETE", urlPattern, null);
+    public Response handleMockDelete(@PathParam("urlPattern") String urlPattern,@Context HttpHeaders headers) {
+        MediaType contentType = headers.getMediaType();
+        return handleMockRequest("DELETE", urlPattern, null, contentType);
     }
 
     private String convertFormToJson(String formData) {
@@ -107,9 +124,12 @@ public class MockResource2 {
     /**
      * Central logic to find, process, and update a mock request with the captured body.
      */
-    private Response handleMockRequest(String httpMethod, String urlPattern, String requestBody) {
+    private Response handleMockRequest(String httpMethod, String urlPattern, String requestBody, MediaType contentType) {
         MockConfig2 mock = mockConfigService.findMockConfig(httpMethod, urlPattern);
-
+        String type=MediaType.APPLICATION_JSON;
+        if(contentType.toString().contains(MediaType.TEXT_XML)){
+            type=contentType.toString();
+        }
         if (mock != null) {
             // Capture the request body and save it
             mock.setCapturedRequestPayload(requestBody);
@@ -131,6 +151,7 @@ public class MockResource2 {
             LOGGER.info(String.format("Returning status %d for %s %s", mock.getHttpStatusCode(), httpMethod, urlPattern));
             return Response.status(mock.getHttpStatusCode())
                     .entity(mock.getResponsePayload())
+                    .type(type)
                     .build();
         } else {
             // No mock found
@@ -138,6 +159,7 @@ public class MockResource2 {
                     "{\"error\": \"No mock configuration found for method '%s' and URL pattern '%s'.\"}",
                     httpMethod, urlPattern
             );
+
             return Response.status(Response.Status.NOT_FOUND)
                     .entity(errorMessage)
                     .type(MediaType.APPLICATION_JSON)

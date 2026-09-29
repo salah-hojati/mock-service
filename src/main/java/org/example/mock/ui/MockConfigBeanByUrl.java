@@ -70,6 +70,22 @@ public class MockConfigBeanByUrl implements Serializable {
         }
     }
 
+    public void saveConfigForSoap() {
+        try {
+            // Normalize JSON payloads before saving
+            this.selectedConfig.setCapturedRequestPayload(this.selectedConfig.getCapturedRequestPayload());
+            this.selectedConfig.setResponsePayload(this.selectedConfig.getResponsePayload());
+            this.selectedConfig.setUser(loginBean.getUser());
+            mockConfigService.save(this.selectedConfig);
+            this.configs = mockConfigService.findAll(); // Refresh list from DB
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Configuration Saved"));
+            PrimeFaces.current().ajax().addCallbackParam("validationFailed", false);
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Save Error", e.getMessage()));
+            PrimeFaces.current().ajax().addCallbackParam("validationFailed", true);
+        }
+    }
+
     public void deleteConfig() {
         try {
             mockConfigService.delete(this.selectedConfig);

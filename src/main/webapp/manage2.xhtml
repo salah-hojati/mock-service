@@ -205,6 +205,11 @@
                                      update=":form:dt-configs :form:messages"
                                      oncomplete="if (!args.validationFailed) { PF('manageConfigDialog').hide(); }"
                                      process="manage-config-content @this"/>
+                    <p:commandButton value="Save for soap" icon="pi pi-check"
+                                     actionListener="#{mockConfigBeanByUrl.saveConfigForSoap}"
+                                     update=":form:dt-configs :form:messages"
+                                     oncomplete="if (!args.validationFailed) { PF('manageConfigDialog').hide(); }"
+                                     process="manage-config-content @this"/>
                     <p:commandButton value="Delete" icon="pi pi-trash" styleClass="ui-button-danger"
                                      actionListener="#{mockConfigBeanByUrl.deleteConfig}"
                                      process="@this"
