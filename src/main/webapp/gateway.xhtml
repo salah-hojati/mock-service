@@ -9,31 +9,97 @@
     <script type="text/javascript">
         // --- SOLUTION: The function now accepts the ID of a hidden input ---
         function copyFromHiddenInput(elementId) {
+            debugger;
             // Find the hidden input element by its ID
+            console.log(elementId);
             const hiddenInputElement = document.getElementById(elementId);
             if (!hiddenInputElement) {
                 console.error('Could not find element with ID:', elementId);
                 return;
             }
 
-            const textToCopy = hiddenInputElement.value;
-
-            navigator.clipboard.writeText(textToCopy).then(function () {
-                PF('copyGrowl').show([{
-                    summary: 'Copied to Clipboard',
-                    detail: 'The content has been copied successfully.',
-                    severity: 'info'
-                }]);
-            }, function (err) {
-                PF('copyGrowl').show([{
-                    summary: 'Copy Failed',
-                    detail: 'Could not copy content to clipboard. See console for details.',
-                    severity: 'error'
-                }]);
-                console.error('Could not copy text: ', err);
-            });
+            const textToCopy = hiddenInputElement.innerText;
+            console.log(textToCopy);
+            // Check if the modern Clipboard API is available and usable
+            if (navigator.clipboard &amp;&amp; window.isSecureContext) {
+                // Use the modern API in secure contexts (HTTPS / localhost)
+                navigator.clipboard.writeText(textToCopy).then(function () {
+                    showCopySuccess();
+                }, function (err) {
+                    console.error('Could not copy text with Clipboard API: ', err);
+                    // If the modern API fails for any reason, try the fallback
+                    fallbackCopyText(textToCopy);
+                });
+            } else {
+                // Fallback for insecure contexts (HTTP on non-localhost) or older browsers
+                fallbackCopyText(textToCopy);
+            }
         }
 
+        function fallbackCopyText(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+
+            // Keep it on-screen but invisible — do NOT use display:none or left:-9999px on mobile
+            textarea.style.position = 'fixed';
+            textarea.style.top = '0';
+            textarea.style.left = '0';
+            textarea.style.width = '2em';
+            textarea.style.height = '2em';
+            textarea.style.padding = '0';
+            textarea.style.border = 'none';
+            textarea.style.outline = 'none';
+            textarea.style.boxShadow = 'none';
+            textarea.style.background = 'transparent';
+            textarea.style.opacity = '0';
+
+            // Prevent iOS keyboard from popping up
+            textarea.setAttribute('readonly', '');
+
+            document.body.appendChild(textarea);
+
+            // Save and restore any existing selection
+            const selection = document.getSelection();
+            const originalRange = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+
+            textarea.select();
+            textarea.setSelectionRange(0, text.length);   // needed on iOS
+
+            let succeeded = false;
+            try {
+                succeeded = document.execCommand('copy');
+            } catch (e) {
+                console.error('execCommand copy threw:', e);
+            }
+
+            document.body.removeChild(textarea);
+            if (originalRange &amp;&amp; selection) {
+                selection.removeAllRanges();
+                selection.addRange(originalRange);
+            }
+
+            if (succeeded) {
+                showCopySuccess();
+            } else {
+                showCopyError('Fallback copy command was unsuccessful.');
+            }
+        }
+
+        function showCopySuccess() {
+            PF('copyGrowl').show([{
+                summary: 'Copied to Clipboard',
+                detail: 'The content has been copied successfully.',
+                severity: 'info'
+            }]);
+        }
+
+        function showCopyError(detailMessage) {
+            PF('copyGrowl').show([{
+                summary: 'Copy Failed',
+                detail: detailMessage || 'Could not copy content to clipboard. See console for details.',
+                severity: 'error'
+            }]);
+        }
 
     </script>
     <style>
@@ -243,18 +309,20 @@
         <p:dialog header="Example Curl Commands" widgetVar="curlDialog" modal="true" width="700" showEffect="fade">
             <p:outputPanel id="curl-dialog-content" styleClass="dialog-scrollable-content">
                 <p>You can use the following templates to test this gateway endpoint:</p>
-                <pre>#{gatewayBean.generatedCurlCommand}</pre>
+                <h:outputText id= 'CurlCommand' value="#{gatewayBean.generatedCurlCommand}" style="word-break: break-all;"/>
             </p:outputPanel>
             <f:facet name="footer">
                 <p:commandButton value="Copy Command" icon="pi pi-copy" type="button"
-                                 onclick="copyFromHiddenInput('curl-dialog-form:hiddenCurlCommand')"
+                                 onclick="copyFromHiddenInput('curl-dialog-form:CurlCommand')"
                                  styleClass="ui-button-info"/>
+
+
                 <p:commandButton value="Close" icon="pi pi-times" onclick="PF('curlDialog').hide()"
                                  class="ui-button-secondary"/>
             </f:facet>
         </p:dialog>
 
-        <h:inputHidden id="hiddenCurlCommand" value="#{gatewayBean.generatedCurlCommand}"/>
+
     </h:form>
 
     <h:form id="log-detail-dialog-form">
@@ -262,64 +330,63 @@
             <p:outputPanel id="log-detail-content" styleClass="dialog-scrollable-content">
                 <p:panelGrid columns="1" layout="grid" styleClass="ui-noborder">
                     <p:panel header="Request Details">
-                        <p:panelGrid columns="4" layout="grid" styleClass="ui-noborder"
-                                     columnClasses="ui-g-2,ui-g-2,ui-g-6,ui-g-2">
+                        <p:panelGrid columns="1" layout="grid" styleClass="ui-noborder"
+                                     columnClasses="ui-g-12">
 
                             <!-- URL -->
                             <h:outputText value="URL:" styleClass="log-label"/>
 
-                            <h:outputText value="#{gatewayBean.detailedLog.requestUrl}" style="word-break: break-all;"/>
+                            <h:outputText id= 'urlText' value="#{gatewayBean.detailedLog.requestUrl}" style="word-break: break-all;"/>
 
 
                             <p:commandButton icon="pi pi-copy" title="Copy URL" type="button"
-                                             onclick="copyFromHiddenInput('log-detail-dialog-form:hiddenUrl')"
+                                             onclick="copyFromHiddenInput('log-detail-dialog-form:urlText')"
                                              styleClass="ui-button-flat ui-button-secondary"/>
 
                             <!-- Request Headers -->
                             <h:outputText value="Headers:" styleClass="log-label" style="vertical-align: top;"/>
 
-                            <pre>#{gatewayBean.detailedLog.requestHeaders}</pre>
+
+                            <h:outputText id= 'ReqHeaders' value="#{gatewayBean.detailedLog.requestHeaders}" style="word-break: break-all;"/>
 
 
                             <p:commandButton icon="pi pi-copy" title="Copy Headers" type="button"
-                                             onclick="copyFromHiddenInput('log-detail-dialog-form:hiddenReqHeaders')"
+                                             onclick="copyFromHiddenInput('log-detail-dialog-form:ReqHeaders')"
                                              styleClass="ui-button-flat ui-button-secondary"/>
 
                             <!-- Request Body -->
                             <h:outputText value="Body:" styleClass="log-label" style="vertical-align: top;"/>
 
-                            <pre>#{empty gatewayBean.detailedLog.requestBody ? '[No Body]' : gatewayBean.detailedLog.requestBody}</pre>
-
+                            <h:outputText id= 'ReqBody' value="#{empty gatewayBean.detailedLog.requestBody ? '[No Body]' : gatewayBean.detailedLog.requestBody}" style="word-break: break-all;"/>
 
                             <p:commandButton icon="pi pi-copy" title="Copy Body" type="button"
-                                             onclick="copyFromHiddenInput('log-detail-dialog-form:hiddenReqBody')"
+                                             onclick="copyFromHiddenInput('log-detail-dialog-form:ReqBody')"
                                              rendered="#{not empty gatewayBean.detailedLog.requestBody}"
                                              styleClass="ui-button-flat ui-button-secondary"/>
                         </p:panelGrid>
                     </p:panel>
 
                     <p:panel header="Response Details">
-                        <p:panelGrid columns="4" layout="grid" styleClass="ui-noborder"
-                                     columnClasses="ui-g-2,ui-g-2,ui-g-6,ui-g-2">
+                        <p:panelGrid columns="1" layout="grid" styleClass="ui-noborder"
+                                     columnClasses="ui-g-12">
 
                             <!-- Response Headers -->
                             <h:outputText value="Headers:" styleClass="log-label" style="vertical-align: top;"/>
 
-                            <pre>#{gatewayBean.detailedLog.responseHeaders}</pre>
-
+                            <pre></pre>
+                            <h:outputText id= 'ResHeaders' value="#{gatewayBean.detailedLog.responseHeaders}" style="word-break: break-all;"/>
 
                             <p:commandButton icon="pi pi-copy" title="Copy Headers" type="button"
-                                             onclick="copyFromHiddenInput('log-detail-dialog-form:hiddenResHeaders')"
+                                             onclick="copyFromHiddenInput('log-detail-dialog-form:ResHeaders')"
                                              styleClass="ui-button-flat ui-button-secondary"/>
 
                             <!-- Response Body -->
                             <h:outputText value="Body:" styleClass="log-label" style="vertical-align: top;"/>
 
-                            <pre>#{empty gatewayBean.detailedLog.responseBody ? '[No Body]' : gatewayBean.detailedLog.responseBody}</pre>
-
+                            <h:outputText id= 'ResBody' value="#{empty gatewayBean.detailedLog.responseBody ? '[No Body]' : gatewayBean.detailedLog.responseBody}" style="word-break: break-all;"/>
 
                             <p:commandButton icon="pi pi-copy" title="Copy Body" type="button"
-                                             onclick="copyFromHiddenInput('log-detail-dialog-form:hiddenResBody')"
+                                             onclick="copyFromHiddenInput('log-detail-dialog-form:ResBody')"
                                              rendered="#{not empty gatewayBean.detailedLog.responseBody}"
                                              styleClass="ui-button-flat ui-button-secondary"/>
                         </p:panelGrid>
@@ -331,11 +398,7 @@
                                  class="ui-button-secondary"/>
             </f:facet>
         </p:dialog>
-        <h:inputHidden id="hiddenResHeaders" value="#{gatewayBean.detailedLog.responseHeaders}"/>
-        <h:inputHidden id="hiddenResBody" value="#{gatewayBean.detailedLog.responseBody}"/>
-        <h:inputHidden id="hiddenReqHeaders" value="#{gatewayBean.detailedLog.requestHeaders}"/>
-        <h:inputHidden id="hiddenUrl" value="#{gatewayBean.detailedLog.requestUrl}"/>
-        <h:inputHidden id="hiddenReqBody" value="#{gatewayBean.detailedLog.requestBody}"/>
+
     </h:form>
 
 </h:body>

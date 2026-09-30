@@ -55,7 +55,17 @@ public class MockConfig implements Serializable {
     @JoinColumn(name = "CATEGORY_ID")
     private Category category;
 
+    @Column(name = "MATCH_BODY")
+    private Boolean matchBody = Boolean.TRUE;
 
+    @Column(name = "MATCH_HEADERS")
+    private Boolean matchHeaders = Boolean.TRUE;
+
+    public Boolean getMatchBody() { return matchBody == null ? Boolean.TRUE : matchBody; }
+    public void setMatchBody(Boolean matchBody) { this.matchBody = matchBody; }
+
+    public Boolean getMatchHeaders() { return matchHeaders == null ? Boolean.TRUE : matchHeaders; }
+    public void setMatchHeaders(Boolean matchHeaders) { this.matchHeaders = matchHeaders; }
 
     // ... existing getters and setters ...
 

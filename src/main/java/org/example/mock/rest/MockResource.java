@@ -113,15 +113,15 @@ public class MockResource {
     // PATCH  — you had PATCH in the UI dropdown but no endpoint here.
     //         Adding it so the generated curl commands actually work.
     // ------------------------------------------------------------------
-    @PATCH
-    @Path("/{urlPattern:.+}")
-    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-    public Response handleMockPatch(@PathParam("urlPattern") String urlPattern,
-                                    @Context HttpHeaders headers,
-                                    String requestBody) {
-        return handleMockRequest("PATCH", urlPattern, requestBody, headers);
-    }
+//    @PATCH
+//    @Path("/{urlPattern:.+}")
+//    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+//    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+//    public Response handleMockPatch(@PathParam("urlPattern") String urlPattern,
+//                                    @Context HttpHeaders headers,
+//                                    String requestBody) {
+//        return handleMockRequest("PATCH", urlPattern, requestBody, headers);
+//    }
 
     // ------------------------------------------------------------------
     // Central logic

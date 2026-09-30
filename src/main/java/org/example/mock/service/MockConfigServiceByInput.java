@@ -45,71 +45,6 @@ public class MockConfigServiceByInput {
         }
     }
 
-    /**
-     * Finds a mock configuration based on URL pattern, request body and request headers.
-     *
-     * Header matching is a SUBSET match: every header declared in
-     * {@code MockConfig.requestHeaders} must be present on the incoming request
-     * with the exact same value. Extra headers on the request are ignored.
-     *
-     * @return the best matching MockConfig, or {@code null} if none match.
-     */
-    public MockConfig findMockConfig(String httpMethod,
-                                     String urlPattern,
-                                     String requestPayload,
-                                     MultivaluedMap<String, String> incomingHeaders) {
-
-        String payloadToSearch = JsonUtil.normalize(requestPayload);
-
-        TypedQuery<MockConfig> query;
-        String jpql;
-
-        if (payloadToSearch == null) {
-            jpql = "SELECT m FROM MockConfig m "
-                    + "WHERE m.httpMethod = :httpMethod "
-                    + "  AND m.urlPattern = :urlPattern "
-                    + "  AND m.requestPayload IS NULL";
-            query = em.createQuery(jpql, MockConfig.class);
-        } else {
-            jpql = "SELECT m FROM MockConfig m "
-                    + "WHERE m.httpMethod = :httpMethod "
-                    + "  AND m.urlPattern = :urlPattern "
-                    + "  AND CAST(m.requestPayload AS VARCHAR2(4000)) = :payload";
-            query = em.createQuery(jpql, MockConfig.class);
-            query.setParameter("payload", payloadToSearch);
-        }
-
-        query.setParameter("httpMethod", httpMethod);
-        query.setParameter("urlPattern", urlPattern);
-
-        List<MockConfig> candidates;
-        try {
-            candidates = query.getResultList();
-        } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE,
-                    "Error finding mock config for method: " + httpMethod + ", URL: " + urlPattern, ex);
-            return null;
-        }
-
-        if (candidates.isEmpty()) {
-            LOGGER.log(Level.FINE,
-                    "No mock configuration found for method: {0}, URL: {1}",
-                    new Object[]{httpMethod, urlPattern});
-            return null;
-        }
-
-        // Pick the first candidate whose header requirements are satisfied.
-        for (MockConfig candidate : candidates) {
-            if (headersMatch(candidate.getRequestHeaders(), incomingHeaders)) {
-                return candidate;
-            }
-        }
-
-        LOGGER.log(Level.FINE,
-                "Found {0} candidate(s) for {1} {2} but none matched the request headers.",
-                new Object[]{candidates.size(), httpMethod, urlPattern});
-        return null;
-    }
 
     /**
      * Backwards-compatible overload — no header matching (all configs match).
@@ -119,49 +54,112 @@ public class MockConfigServiceByInput {
         return findMockConfig(httpMethod, urlPattern, requestPayload, null);
     }
 
-    // ------------------------------------------------------------------
-    // Header matching helpers
-    // ------------------------------------------------------------------
+    public MockConfig findMockConfig(String httpMethod,
+                                     String urlPattern,
+                                     String requestPayload,
+                                     MultivaluedMap<String, String> incomingHeaders) {
 
-    /**
-     * Returns {@code true} when every header declared in {@code storedHeaders}
-     * is present in {@code incomingHeaders} with the same value.
-     *
-     * <p>Format of {@code storedHeaders}: one entry per line,
-     * {@code Name: value}. Blank lines and lines starting with {@code #} are
-     * ignored. If {@code storedHeaders} is empty, everything matches.</p>
-     */
-    private boolean headersMatch(String storedHeaders,
-                                 MultivaluedMap<String, String> incomingHeaders) {
+        String payloadToSearch = JsonUtil.normalize(requestPayload);
 
-        if (storedHeaders == null || storedHeaders.trim().isEmpty()) {
-            return true;
+        // Load every config for this method + URL — filtering happens in Java
+        // because the "match body / match headers" rules are per-row.
+        TypedQuery<MockConfig> query = em.createQuery(
+                "SELECT m FROM MockConfig m "
+                        + "WHERE m.httpMethod = :httpMethod "
+                        + "  AND m.urlPattern = :urlPattern "
+                        + "ORDER BY m.id",                 // stable order
+                MockConfig.class);
+        query.setParameter("httpMethod", httpMethod);
+        query.setParameter("urlPattern", urlPattern);
+
+        List<MockConfig> candidates;
+        try {
+            candidates = query.getResultList();
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE,
+                    "Error finding mock config for " + httpMethod + " " + urlPattern, ex);
+            return null;
         }
-        if (incomingHeaders == null) {
-            return false;
+
+        if (candidates.isEmpty()) {
+            LOGGER.log(Level.FINE, "No mock configs registered for {0} {1}",
+                    new Object[]{httpMethod, urlPattern});
+            return null;
         }
 
-        for (String line : storedHeaders.split("\\r?\\n")) {
-            String trimmed = line.trim();
-            if (trimmed.isEmpty() || trimmed.startsWith("#")) {
-                continue;
+        // Pick the FIRST candidate whose flags allow a match.
+        // (Sort by id, so the oldest rule wins — predictable.)
+        MockConfig best = null;
+        for (MockConfig c : candidates) {
+            if (!matches(c, payloadToSearch, incomingHeaders)) continue;
+
+            // Prefer a more specific rule over a wildcard when both match.
+            if (best == null || specificity(c) > specificity(best)) {
+                best = c;
             }
+        }
 
-            int idx = trimmed.indexOf(':');
-            if (idx <= 0) {
-                continue; // malformed line, skip
-            }
+        if (best == null) {
+            LOGGER.log(Level.FINE, "Configs exist for {0} {1} but none matched the request.",
+                    new Object[]{httpMethod, urlPattern});
+        }
+        return best;
+    }
 
-            String name     = trimmed.substring(0, idx).trim();
-            String expected = trimmed.substring(idx + 1).trim();
+    /** Does this config accept the given request? */
+    private boolean matches(MockConfig c, String payload, MultivaluedMap<String, String> headers) {
 
-            String actual = lookupHeaderIgnoreCase(incomingHeaders, name);
-            if (actual == null || !actual.equals(expected)) {
-                LOGGER.log(Level.FINE,
-                        "Header mismatch: expected {0}=''{1}'' but request had ''{2}''",
-                        new Object[]{name, expected, actual});
+        // 1) Body check — only when the rule asks for it
+        if (Boolean.TRUE.equals(c.getMatchBody())) {
+            String stored = JsonUtil.normalize(c.getRequestPayload());
+            if (stored == null) {
+                // rule says "match body" but rule body is empty → require empty request body
+                if (payload != null) return false;
+            } else if (!stored.equals(payload)) {
                 return false;
             }
+        }
+
+        // 2) Header check — only when the rule asks for it
+        if (Boolean.TRUE.equals(c.getMatchHeaders())) {
+            if (!headersMatch(c.getRequestHeaders(), headers)) return false;
+        }
+
+        return true;
+    }
+
+    /** Bigger = more specific = preferred when several rules match. */
+    private int specificity(MockConfig c) {
+        int score = 0;
+        if (Boolean.TRUE.equals(c.getMatchBody())
+                && c.getRequestPayload() != null && !c.getRequestPayload().isEmpty()) score += 2;
+        if (Boolean.TRUE.equals(c.getMatchHeaders())
+                && c.getRequestHeaders() != null && !c.getRequestHeaders().isEmpty()) score += 1;
+        return score;
+    }
+
+    // headersMatch(...) — unchanged from the previous version.
+    private boolean headersMatch(String storedHeaders, MultivaluedMap<String, String> incomingHeaders) {
+        if (storedHeaders == null || storedHeaders.trim().isEmpty()) return true;
+        if (incomingHeaders == null) return false;
+
+        for (String line : storedHeaders.split("\\r?\\n")) {
+            String t = line.trim();
+            if (t.isEmpty() || t.startsWith("#")) continue;
+            int i = t.indexOf(':');
+            if (i <= 0) continue;
+            String name     = t.substring(0, i).trim();
+            String expected = t.substring(i + 1).trim();
+
+            String actual = null;
+            for (Map.Entry<String, List<String>> e : incomingHeaders.entrySet()) {
+                if (e.getKey() != null && e.getKey().equalsIgnoreCase(name)) {
+                    List<String> v = e.getValue();
+                    actual = (v == null || v.isEmpty()) ? null : v.get(0);
+                    break;
+                }
+            }
+            if (actual == null || !actual.equals(expected)) return false;
         }
         return true;
     }

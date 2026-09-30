@@ -136,7 +136,7 @@ public class GatewayBean implements Serializable {
 
         // 3. Create example commands for different methods
         String getExample = String.format(
-                "# Example for a GET request:\n" +
+               // "# Example for a GET request:\n" +
                         "curl -i -X GET '%s'",
                 fullUrl
         );

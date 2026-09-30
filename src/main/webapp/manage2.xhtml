@@ -9,29 +9,96 @@
     <script type="text/javascript">
         // --- SOLUTION: The function now accepts the ID of a hidden input ---
         function copyFromHiddenInput(elementId) {
+            debugger;
             // Find the hidden input element by its ID
+            console.log(elementId);
             const hiddenInputElement = document.getElementById(elementId);
             if (!hiddenInputElement) {
                 console.error('Could not find element with ID:', elementId);
                 return;
             }
 
-            const textToCopy = hiddenInputElement.value;
+            const textToCopy = hiddenInputElement.innerText;
+            console.log(textToCopy);
+            // Check if the modern Clipboard API is available and usable
+            if (navigator.clipboard &amp;&amp; window.isSecureContext) {
+                // Use the modern API in secure contexts (HTTPS / localhost)
+                navigator.clipboard.writeText(textToCopy).then(function () {
+                    showCopySuccess();
+                }, function (err) {
+                    console.error('Could not copy text with Clipboard API: ', err);
+                    // If the modern API fails for any reason, try the fallback
+                    fallbackCopyText(textToCopy);
+                });
+            } else {
+                // Fallback for insecure contexts (HTTP on non-localhost) or older browsers
+                fallbackCopyText(textToCopy);
+            }
+        }
 
-            navigator.clipboard.writeText(textToCopy).then(function () {
-                PF('copyGrowl').show([{
-                    summary: 'Copied to Clipboard',
-                    detail: 'The content has been copied successfully.',
-                    severity: 'info'
-                }]);
-            }, function (err) {
-                PF('copyGrowl').show([{
-                    summary: 'Copy Failed',
-                    detail: 'Could not copy content to clipboard. See console for details.',
-                    severity: 'error'
-                }]);
-                console.error('Could not copy text: ', err);
-            });
+        function fallbackCopyText(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+
+            // Keep it on-screen but invisible — do NOT use display:none or left:-9999px on mobile
+            textarea.style.position = 'fixed';
+            textarea.style.top = '0';
+            textarea.style.left = '0';
+            textarea.style.width = '2em';
+            textarea.style.height = '2em';
+            textarea.style.padding = '0';
+            textarea.style.border = 'none';
+            textarea.style.outline = 'none';
+            textarea.style.boxShadow = 'none';
+            textarea.style.background = 'transparent';
+            textarea.style.opacity = '0';
+
+            // Prevent iOS keyboard from popping up
+            textarea.setAttribute('readonly', '');
+
+            document.body.appendChild(textarea);
+
+            // Save and restore any existing selection
+            const selection = document.getSelection();
+            const originalRange = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+
+            textarea.select();
+            textarea.setSelectionRange(0, text.length);   // needed on iOS
+
+            let succeeded = false;
+            try {
+                succeeded = document.execCommand('copy');
+            } catch (e) {
+                console.error('execCommand copy threw:', e);
+            }
+
+            document.body.removeChild(textarea);
+            if (originalRange &amp;&amp; selection) {
+                selection.removeAllRanges();
+                selection.addRange(originalRange);
+            }
+
+            if (succeeded) {
+                showCopySuccess();
+            } else {
+                showCopyError('Fallback copy command was unsuccessful.');
+            }
+        }
+
+        function showCopySuccess() {
+            PF('copyGrowl').show([{
+                summary: 'Copied to Clipboard',
+                detail: 'The content has been copied successfully.',
+                severity: 'info'
+            }]);
+        }
+
+        function showCopyError(detailMessage) {
+            PF('copyGrowl').show([{
+                summary: 'Copy Failed',
+                detail: detailMessage || 'Could not copy content to clipboard. See console for details.',
+                severity: 'error'
+            }]);
         }
 
 
@@ -229,12 +296,12 @@
                 <p:outputPanel id="curl-dialog-content" styleClass="dialog-scrollable-content">
                     <p>You can use the following command to test this mock endpoint:</p>
                     <div class="curl-command">
-                        <h:outputText value="#{mockConfigBeanByUrl.generatedCurlCommand}"/>
+                        <h:outputText  id ="CurlCommand" value="#{mockConfigBeanByUrl.generatedCurlCommand}"/>
                     </div>
                 </p:outputPanel>
                 <f:facet name="footer">
                     <p:commandButton value="Copy Command" icon="pi pi-copy" type="button"
-                                     onclick="copyFromHiddenInput('form:hiddenCurlCommand')"
+                                     onclick="copyFromHiddenInput('form:CurlCommand')"
                                      styleClass="ui-button-info"/>
                     <p:commandButton value="Close" icon="pi pi-times" onclick="PF('curlDialog').hide()"
                                      class="ui-button-secondary"/>

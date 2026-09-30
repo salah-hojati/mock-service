@@ -99,86 +99,178 @@ public class MockConfigBeanByInput implements Serializable {
         }
     }
 
+    /* ============================================================
+     * Curl generation
+     * ============================================================ */
 
+    /** Called from the row button — reloads the row first, then builds the curl. */
     public void generateCurl(MockConfig selectedConfig) {
-    this.selectedConfig =mockConfigService.findById(selectedConfig.getId());
-        FacesContext context = FacesContext.getCurrentInstance();
-        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
-
-        // Construct the base URL (e.g., http://localhost:7001/mock-service)
-        String baseUrl = String.format("%s://%s:%d%s",
-                request.getScheme(),
-                request.getServerName(),
-                request.getServerPort(),
-                request.getContextPath());
-
-        String fullUrl = String.format("%s/api/mock/%s", baseUrl, this.selectedConfig .getUrlPattern());
-        String httpMethod = this.selectedConfig .getHttpMethod().toUpperCase();
-
-        StringBuilder curl = new StringBuilder("curl -i -X ");
-        curl.append(httpMethod).append(" "); // Use the dynamic method
-        curl.append("'").append(fullUrl).append("'");
-
-        // Only add Content-Type and data for methods that typically have a body
-        boolean hasBody = "POST".equals(httpMethod) || "PUT".equals(httpMethod) || "PATCH".equals(httpMethod);
-
-        if (hasBody) {
-            curl.append(" \\\n"); // Add line break for readability
-            curl.append("-H 'Content-Type: application/json'");
-
-            if (this.selectedConfig .getRequestPayload() != null && !this.selectedConfig .getRequestPayload().isEmpty()) {
-                // Escape single quotes in the JSON payload for shell safety
-                String escapedPayload = this.selectedConfig .getRequestPayload().replace("'", "'\\''");
-                curl.append(" \\\n");
-                curl.append("-d '").append(escapedPayload).append("'");
-            }
-        }
-        this.curlCommandToCopy = curl.toString();;
-        this.generatedCurlCommand = curl.toString();;
-
+        this.selectedConfig = mockConfigService.findById(selectedConfig.getId());
+        this.generatedCurlCommand = buildCurl(this.selectedConfig);
+        this.curlCommandToCopy     = this.generatedCurlCommand;
     }
+
+    /** Called with no args (e.g. from the dialog) — uses the current selectedConfig. */
     public void generateCurl() {
         if (this.selectedConfig == null) {
-            LOGGER.warning("generateCurl() was called but selectedConfig is null. This indicates a mismatch between the dataTable 'var' and the f:setPropertyActionListener 'value'.");
-            this.generatedCurlCommand = "# Error: No configuration was selected to generate the command.";
-            this.curlCommandToCopy = this.generatedCurlCommand;
+            LOGGER.warning("generateCurl() called with null selectedConfig.");
+            this.generatedCurlCommand = "# Error: No configuration was selected.";
+            this.curlCommandToCopy    = this.generatedCurlCommand;
             return;
         }
-        FacesContext context = FacesContext.getCurrentInstance();
-        HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
+        this.generatedCurlCommand = buildCurl(this.selectedConfig);
+        this.curlCommandToCopy    = this.generatedCurlCommand;
+    }
 
-        // Construct the base URL (e.g., http://localhost:7001/mock-service)
+    /**
+     * Builds a curl command from a MockConfig.
+     *
+     * Header handling:
+     *   - The stored `requestHeaders` field is a multi-line "Name: value" list.
+     *   - Each valid line becomes its own `-H 'Name: value'` argument.
+     *   - If POST/PUT/PATCH and the user did NOT declare a Content-Type header,
+     *     `-H 'Content-Type: application/json'` is added automatically.
+     *   - If the user DID declare Content-Type, their value is used instead.
+     */
+    private String buildCurl(MockConfig config) {
+        FacesContext context = FacesContext.getCurrentInstance();
+        HttpServletRequest request =
+                (HttpServletRequest) context.getExternalContext().getRequest();
+
         String baseUrl = String.format("%s://%s:%d%s",
                 request.getScheme(),
                 request.getServerName(),
                 request.getServerPort(),
                 request.getContextPath());
 
-        String fullUrl = String.format("%s/api/mock/%s", baseUrl, this.selectedConfig .getUrlPattern());
-        String httpMethod = this.selectedConfig .getHttpMethod().toUpperCase();
+        String fullUrl    = String.format("%s/api/mock/%s", baseUrl, config.getUrlPattern());
+        String httpMethod = config.getHttpMethod().toUpperCase();
 
         StringBuilder curl = new StringBuilder("curl -i -X ");
-        curl.append(httpMethod).append(" "); // Use the dynamic method
-        curl.append("'").append(fullUrl).append("'");
+        curl.append(httpMethod).append(" '").append(fullUrl).append("'");
 
-        // Only add Content-Type and data for methods that typically have a body
-        boolean hasBody = "POST".equals(httpMethod) || "PUT".equals(httpMethod) || "PATCH".equals(httpMethod);
+        boolean hasBody = "POST".equals(httpMethod)
+                || "PUT".equals(httpMethod)
+                || "PATCH".equals(httpMethod);
 
-        if (hasBody) {
-            curl.append(" \\\n"); // Add line break for readability
-            curl.append("-H 'Content-Type: application/json'");
+        // ---- Parse stored header lines into [name, value] pairs ----
+        List<String[]> headers = parseHeaderLines(config.getRequestHeaders());
 
-            if (this.selectedConfig .getRequestPayload() != null && !this.selectedConfig .getRequestPayload().isEmpty()) {
-                // Escape single quotes in the JSON payload for shell safety
-                String escapedPayload = this.selectedConfig .getRequestPayload().replace("'", "'\\''");
-                curl.append(" \\\n");
-                curl.append("-d '").append(escapedPayload).append("'");
+        // Does the user already specify Content-Type?
+        boolean userSetContentType = headers.stream()
+                .anyMatch(h -> h[0].equalsIgnoreCase("Content-Type"));
+
+        // Auto-add Content-Type for body-bearing methods only if user didn't.
+        if (hasBody && !userSetContentType) {
+            curl.append(" \\\n").append("-H 'Content-Type: application/json'");
+        }
+
+        // Emit every user-declared header.
+        for (String[] header : headers) {
+            curl.append(" \\\n")
+                    .append("-H '")
+                    .append(escapeSingleQuotes(header[0])).append(": ")
+                    .append(escapeSingleQuotes(header[1]))
+                    .append("'");
+        }
+
+        // ---- Request body ----
+        if (hasBody
+                && config.getRequestPayload() != null
+                && !config.getRequestPayload().isEmpty()) {
+            curl.append(" \\\n");
+            curl.append("-d '")
+                    .append(escapeSingleQuotes(config.getRequestPayload()))
+                    .append("'");
+        }
+
+        return curl.toString();
+    }
+
+    /** Parses "Name: value" lines. Blank lines and #-comments are ignored. */
+    private List<String[]> parseHeaderLines(String raw) {
+        List<String[]> headers = new ArrayList<>();
+        if (raw == null || raw.trim().isEmpty()) {
+            return headers;
+        }
+        for (String line : raw.split("\\r?\\n")) {
+            String trimmed = line.trim();
+            if (trimmed.isEmpty() || trimmed.startsWith("#")) {
+                continue;
+            }
+            int idx = trimmed.indexOf(':');
+            if (idx <= 0) {
+                continue;                         // malformed, skip
+            }
+            String name  = trimmed.substring(0, idx).trim();
+            String value = trimmed.substring(idx + 1).trim();
+            if (!name.isEmpty()) {
+                headers.add(new String[]{name, value});
             }
         }
-        this.curlCommandToCopy = curl.toString();;
-        this.generatedCurlCommand = curl.toString();;
-
+        return headers;
     }
+
+    /** Escapes ' for use inside single-quoted shell strings. */
+    private String escapeSingleQuotes(String s) {
+        return s == null ? "" : s.replace("'", "'\\''");
+    }
+
+
+
+
+    /**
+     * Clones an existing config into a new (unsaved) one and opens the dialog.
+     * The new row keeps every field except the ID and creation metadata,
+     * so it becomes a fresh INSERT when the user clicks Save.
+     */
+    public void duplicateConfig(MockConfig source) {
+        if (source == null) {
+            return;
+        }
+        try {
+            // Reload the full entity (in case the row is a lazy proxy)
+            MockConfig original = mockConfigService.findById(source.getId());
+            if (original == null) {
+                addErrorMessage("Clone Error", "Source configuration no longer exists.");
+                return;
+            }
+
+            MockConfig copy = new MockConfig();
+
+            // --- Copy every field EXCEPT the identity / audit columns ---
+            copy.setHttpMethod(original.getHttpMethod());
+            copy.setUrlPattern(original.getUrlPattern());
+            copy.setRequestPayload(original.getRequestPayload());
+            copy.setRequestHeaders(original.getRequestHeaders());
+            copy.setResponsePayload(original.getResponsePayload());
+            copy.setDelayMs(original.getDelayMs());
+            copy.setHttpStatusCode(original.getHttpStatusCode());
+
+            // Description gets a "(copy)" suffix so you can tell them apart.
+            String desc = original.getDescription();
+            copy.setDescription(
+                    (desc == null || desc.isEmpty())
+                            ? "(copy)"
+                            : desc + " (copy)");
+
+            // IMPORTANT: leave id == null so JPA treats this as a new row.
+            // copy.setId(null) is not needed because it's already null on a fresh object.
+
+            this.selectedConfig = copy;
+
+            addMessage("Cloned",
+                    "A copy of the configuration was created. Review it and click Save.");
+
+            // Reset any stale form state, then let the dialog render the new values.
+            PrimeFaces.current().resetInputs("form:manage-config-content");
+
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error duplicating configuration", e);
+            addErrorMessage("Clone Error", "Could not duplicate the configuration. Check server logs.");
+        }
+    }
+
     // ============================================================
 
     private void addMessage(String summary, String detail) {

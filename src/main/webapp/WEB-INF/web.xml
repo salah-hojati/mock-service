@@ -47,8 +47,15 @@
     <!-- Disable partial state saving (fixes StringIndexOutOfBoundsException) -->
     <context-param>
         <param-name>javax.faces.PARTIAL_STATE_SAVING</param-name>
-        <param-value>false</param-value>
+        <param-value>true</param-value>
     </context-param>
+    <!-- WebLogic specific context parameters -->
+    <context-param>
+        <param-name>com.sun.faces.expressionFactory</param-name>
+        <param-value>com.sun.el.ExpressionFactoryImpl</param-value>
+    </context-param>
+
+
 
     <!-- Auth Filter - Using web.xml instead of @WebFilter -->
     <!-- Uncomment when ready -->
