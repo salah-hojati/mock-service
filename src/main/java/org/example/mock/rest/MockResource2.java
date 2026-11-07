@@ -124,46 +124,66 @@ public class MockResource2 {
     /**
      * Central logic to find, process, and update a mock request with the captured body.
      */
-    private Response handleMockRequest(String httpMethod, String urlPattern, String requestBody, MediaType contentType) {
+    private Response handleMockRequest(String httpMethod, String urlPattern,
+                                       String requestBody, MediaType contentType) {
+
         MockConfig2 mock = mockConfigService.findMockConfig(httpMethod, urlPattern);
-        String type=MediaType.APPLICATION_JSON;
-        if(contentType.toString().contains(MediaType.TEXT_XML)){
-            type=contentType.toString();
-        }
-        if (mock != null) {
-            // Capture the request body and save it
-            mock.setCapturedRequestPayload(requestBody);
-            mockConfigService.save(mock); // Use the existing save method to update the entity
 
-            // Delay Logic
-            Integer delay = mock.getDelayMs();
-            if (delay != null && delay > 0) {
-                try {
-                    LOGGER.info(String.format("Delaying response for %dms for %s %s", delay, httpMethod, urlPattern));
-                    Thread.sleep(delay);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    return Response.serverError().entity("{\"error\": \"Thread interrupted during delay\"}").build();
-                }
+        // ---- Determine response media type safely ----
+        MediaType responseType = MediaType.APPLICATION_JSON_TYPE;
+        if (contentType != null) {
+            String ct = contentType.toString(); // never null per JAX-RS contract
+            if (ct != null && ct.contains(MediaType.TEXT_XML)) {
+                responseType = contentType;
             }
+        }
 
-            // HTTP Status Code Logic
-            LOGGER.info(String.format("Returning status %d for %s %s", mock.getHttpStatusCode(), httpMethod, urlPattern));
-            return Response.status(mock.getHttpStatusCode())
-                    .entity(mock.getResponsePayload())
-                    .type(type)
-                    .build();
-        } else {
-            // No mock found
+        if (mock == null) {
             String errorMessage = String.format(
                     "{\"error\": \"No mock configuration found for method '%s' and URL pattern '%s'.\"}",
-                    httpMethod, urlPattern
-            );
-
+                    httpMethod, urlPattern);
             return Response.status(Response.Status.NOT_FOUND)
                     .entity(errorMessage)
-                    .type(MediaType.APPLICATION_JSON)
+                    .type(MediaType.APPLICATION_JSON_TYPE)
                     .build();
         }
+
+        // ---- Capture request ----
+        mock.setCapturedRequestPayload(requestBody);
+        mockConfigService.save(mock);
+
+        // ---- Delay ----
+        Integer delay = mock.getDelayMs();
+        if (delay != null && delay > 0) {
+            try {
+                LOGGER.info(String.format("Delaying response for %dms for %s %s",
+                        delay, httpMethod, urlPattern));
+                Thread.sleep(delay);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return Response.serverError()
+                        .entity("{\"error\": \"Thread interrupted during delay\"}")
+                        .type(MediaType.APPLICATION_JSON_TYPE)
+                        .build();
+            }
+        }
+
+        // ---- Status + payload, both null-safe ----
+        Integer configuredStatus = mock.getHttpStatusCode();
+        int status = (configuredStatus != null)
+                ? configuredStatus
+                : Response.Status.OK.getStatusCode();
+
+        String payload = mock.getResponsePayload() != null
+                ? mock.getResponsePayload()
+                : "";
+
+        LOGGER.info(String.format("Returning status %d for %s %s",
+                status, httpMethod, urlPattern));
+
+        return Response.status(status)
+                .entity(payload)
+                .type(responseType)
+                .build();
     }
 }
